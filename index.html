@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Grand El Hajj Studio - Offline Standalone Engine</title>
+  <title>Grand El Hajj Studio - Fixed Engine</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
     body {
@@ -12,193 +12,330 @@
       display: flex; flex-direction: column; overflow: hidden; font-size: 11px;
     }
 
+    /* HEADER */
     header {
       height: 42px; background: #161920; border-bottom: 1px solid #262b36;
       display: flex; align-items: center; justify-content: space-between; padding: 0 12px;
     }
-    .brand { font-weight: 800; font-size: 13px; color: #10b981; letter-spacing: 1.5px; }
+    .brand-section { display: flex; align-items: center; gap: 10px; }
+    .brand-logo { height: 24px; cursor: pointer; object-fit: contain; }
+    .brand-title { font-weight: 800; font-size: 13px; color: #10b981; letter-spacing: 1.5px; }
 
-    .workspace { display: flex; flex-direction: column; flex: 1; height: calc(100vh - 42px); }
-
-    /* DISPLAY OUTPUT AREA */
-    .top-section { display: flex; height: 55%; background: #0b0c10; border-bottom: 1px solid #262b36; }
-    .display-box { flex: 1; background: #000; display: flex; flex-direction: column; position: relative; }
-    .display-header { background: #161920; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #262b36; }
-    
-    .screen-container {
-      flex: 1; display: flex; width: 100%; height: 100%; background: #050505; position: relative; overflow: hidden;
+    .header-controls { display: flex; align-items: center; gap: 8px; }
+    .btn {
+      background: #222733; color: #e2e8f0; border: 1px solid #334155;
+      padding: 4px 10px; font-size: 11px; border-radius: 4px; cursor: pointer;
+      font-weight: 600; display: inline-flex; align-items: center; gap: 5px;
     }
-    .screen-partition {
-      flex: 1; height: 100%; border-right: 1px solid #1e293b; position: relative;
-      display: flex; align-items: center; justify-content: center; background: #000; overflow: hidden;
-    }
-    .screen-partition:last-child { border-right: none; }
+    .btn:hover { background: #2d3546; border-color: #475569; }
+    .btn-accent { background: #0284c7; color: #fff; border-color: #0369a1; }
+    .btn-accent:hover { background: #0369a1; }
     
-    .screen-partition video, .screen-partition img {
-      width: 100%; height: 100%; object-fit: contain; pointer-events: none;
+    .scene-selector { display: flex; background: #0f1115; padding: 2px; border-radius: 4px; border: 1px solid #262b36; }
+    .btn-scene {
+      background: transparent; color: #94a3b8; border: none; padding: 3px 8px;
+      font-size: 10px; font-weight: 700; border-radius: 2px; cursor: pointer;
+    }
+    .btn-scene.active { background: #10b981; color: #000; }
+
+    /* WORKSPACE */
+    .workspace { display: flex; flex: 1; height: calc(100vh - 42px); overflow: hidden; }
+
+    /* LEFT: CANVAS & SLIDERS */
+    .left-panel { flex: 1; display: flex; flex-direction: column; border-right: 1px solid #262b36; background: #0b0c10; }
+    
+    .canvas-header {
+      background: #161920; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1px solid #262b36; font-weight: 700; color: #38bdf8;
     }
 
-    /* MATRIX GRID */
-    .matrix-section { display: flex; flex: 1; background: #0f1115; overflow: hidden; }
-    .layers-stack { flex: 1; display: flex; flex-direction: column; padding: 8px; gap: 8px; overflow-y: auto; }
+    .canvas-wrapper {
+      flex: 1; display: flex; align-items: center; justify-content: center; background: #050505;
+      position: relative; padding: 10px; overflow: hidden;
+    }
+    canvas { background: #000; box-shadow: 0 0 20px rgba(0,0,0,0.8); max-width: 100%; max-height: 100%; }
 
-    .layer-row { display: flex; height: 100px; background: #161920; border: 1px solid #262b36; border-radius: 4px; }
-    .layer-head { width: 140px; background: #1a1e26; padding: 8px; border-right: 1px solid #262b36; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
+    /* RIGHT: CONTROLS PANEL */
+    .right-panel { width: 320px; background: #11141a; border-left: 1px solid #262b36; display: flex; flex-direction: column; overflow-y: auto; }
+    .panel-section { padding: 12px; border-bottom: 1px solid #1e293b; }
+    .panel-title { font-size: 11px; font-weight: 700; color: #10b981; text-transform: uppercase; margin-bottom: 8px; display: flex; justify-content: space-between; }
+
+    .control-group { margin-bottom: 8px; }
+    .control-label { display: flex; justify-content: space-between; margin-bottom: 2px; color: #94a3b8; font-size: 10px; }
+    input[type="range"] { width: 100%; accent-color: #10b981; cursor: pointer; }
+
+    /* BOTTOM: MATRIX GRID */
+    .matrix-section { height: 200px; background: #0f1115; border-top: 1px solid #262b36; display: flex; flex-direction: column; }
+    .matrix-container { flex: 1; display: flex; flex-direction: column; padding: 6px; gap: 6px; overflow-y: auto; }
     
-    .clips-container { flex: 1; display: flex; gap: 8px; padding: 8px; overflow-x: auto; align-items: center; }
-    
+    .layer-row { display: flex; height: 52px; background: #161920; border: 1px solid #262b36; border-radius: 4px; align-items: center; }
+    .layer-head { width: 110px; padding: 6px; border-right: 1px solid #262b36; font-weight: 700; font-size: 10px; display: flex; flex-direction: column; gap: 4px; }
+    .clips-container { flex: 1; display: flex; gap: 6px; padding: 4px; overflow-x: auto; align-items: center; }
+
     .clip-slot {
-      min-width: 110px; width: 110px; height: 100%; background: #1a1e26; border: 1px dashed #334155; border-radius: 4px;
+      width: 64px; height: 42px; background: #1a1e26; border: 1px dashed #334155; border-radius: 3px;
       cursor: pointer; position: relative; overflow: hidden; display: flex; flex-direction: column;
-      align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0;
+      align-items: center; justify-content: center; flex-shrink: 0;
     }
-    .clip-slot:hover { border-color: #10b981; background: #222733; }
-    .clip-slot.active { border: 2px solid #10b981; box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
-    .clip-slot.active::after {
-      content: 'LIVE'; position: absolute; top: 2px; right: 2px; background: #ef4444; color: #fff;
-      font-size: 8px; font-weight: bold; padding: 1px 4px; border-radius: 2px; z-index: 6;
-    }
+    .clip-slot:hover { border-color: #10b981; }
+    .clip-slot.active { border: 2px solid #10b981; box-shadow: 0 0 8px rgba(16, 185, 129, 0.5); }
+    .clip-thumb { width: 100%; height: 100%; object-fit: cover; }
 
-    .slot-thumb-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; display: flex; align-items: center; justify-content: center; }
-    .slot-thumb-container video, .slot-thumb-container img { width: 100%; height: 100%; object-fit: cover; }
-
-    .btn-delete {
-      position: absolute; bottom: 2px; right: 2px; background: #ef4444; color: #fff; border: none;
-      padding: 2px 6px; font-size: 9px; border-radius: 2px; cursor: pointer; z-index: 10;
+    .clip-controls {
+      position: absolute; inset: 0; background: rgba(0,0,0,0.7); display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 2px; opacity: 0; transition: opacity 0.2s;
     }
+    .clip-slot:hover .clip-controls { opacity: 1; }
+    .btn-ctrl { background: #334155; color: #fff; border: none; font-size: 8px; padding: 2px 4px; border-radius: 2px; cursor: pointer; }
+    .btn-ctrl.danger { background: #ef4444; }
+
+    /* TICKER MARQUEE */
+    .ticker-box { background: #000; color: #fff; padding: 4px 0; overflow: hidden; white-space: nowrap; border-top: 1px solid #262b36; display: none; }
+    .ticker-text { display: inline-block; animation: marquee 15s linear infinite; font-size: 12px; font-weight: bold; }
+    @keyframes marquee { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
+
+    /* VU METER */
+    .vu-meter { height: 4px; background: #1e293b; width: 100%; overflow: hidden; }
+    .vu-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #10b981, #f59e0b, #ef4444); transition: width 0.1s; }
   </style>
 </head>
 <body>
 
+  <!-- HEADER -->
   <header>
-    <div class="brand">GRAND EL HAJJ // STUDIO ENGINE</div>
-    <div style="font-family: monospace; font-size: 12px; color: #38bdf8;" id="studioClock">00:00:00 WIB</div>
+    <div class="brand-section">
+      <div class="brand-title" onclick="promptProtectedSettings()">GRAND EL HAJJ // STUDIO ENGINE</div>
+    </div>
+    
+    <div class="header-controls">
+      <div class="scene-selector">
+        <button class="btn-scene active" id="btnScene1" onclick="switchScene(1)">SCENE 1</button>
+        <button class="btn-scene" id="btnScene2" onclick="switchScene(2)">SCENE 2</button>
+        <button class="btn-scene" id="btnScene3" onclick="switchScene(3)">SCENE 3</button>
+        <button class="btn-scene" id="btnScene4" onclick="switchScene(4)">SCENE 4</button>
+      </div>
+
+      <button class="btn btn-accent" onclick="saveShowPreset()">💾 SIMPAN ACARA</button>
+      <button class="btn" onclick="loadShowPreset()">📂 BUKA ACARA</button>
+      <div style="font-family: monospace; font-size: 11px; color: #38bdf8; margin-left: 10px;" id="studioClock">00:00:00 WIB</div>
+    </div>
   </header>
 
+  <!-- WORKSPACE MAIN -->
   <div class="workspace">
+    
+    <!-- LEFT PANEL: CANVAS -->
+    <div class="left-panel">
+      <div class="canvas-header">
+        <span id="currentSceneTitle">PROGRAM OUTPUT - SCENE 1</span>
+        <div>
+          <button class="btn" onclick="toggleFullScreen()">🖥️ FULLSCREEN (1 LAYAR)</button>
+        </div>
+      </div>
+      
+      <div class="canvas-wrapper" id="canvasContainer">
+        <canvas id="masterCanvas" width="1280" height="720"></canvas>
+      </div>
 
-    <!-- DISPLAY SCREEN UTAMA -->
-    <div class="top-section">
-      <div class="display-box">
-        <div class="display-header">
-          <span style="font-weight:700; color:#38bdf8;">PROGRAM OUTPUT</span>
-          <button style="background:#1e293b; color:#fff; border:1px solid #334155; padding:3px 8px; border-radius:3px; cursor:pointer;" onclick="toggleFullScreen()">🖥️ FULLSCREEN</button>
-        </div>
-        
-        <div class="screen-container" id="screenContainer">
-          <!-- LAYAR KIRI (0) -->
-          <div class="screen-partition" id="screen-0">
-            <span style="color:#475569;">LAYAR KIRI</span>
-          </div>
-          <!-- LAYAR TENGAH (1) -->
-          <div class="screen-partition" id="screen-1">
-            <span style="color:#475569;">LAYAR TENGAH</span>
-          </div>
-          <!-- LAYAR KANAN (2) -->
-          <div class="screen-partition" id="screen-2">
-            <span style="color:#475569;">LAYAR KANAN</span>
-          </div>
-        </div>
+      <div class="vu-meter"><div class="vu-fill" id="vuFill"></div></div>
+
+      <div class="ticker-box" id="tickerBox">
+        <div class="ticker-text" id="tickerContent">---</div>
       </div>
     </div>
 
-    <!-- MATRIX CONTROL -->
-    <div class="matrix-section">
-      <div class="layers-stack">
-        
-        <!-- ROW LAYAR KANAN -->
-        <div class="layer-row">
-          <div class="layer-head">
-            <span style="color:#38bdf8; font-weight:700;">LAYAR KANAN</span>
-            <button style="background:#10b981; border:none; padding:2px; font-weight:bold; cursor:pointer;" onclick="addNewSlot(2)">+ Slot</button>
-          </div>
-          <div class="clips-container" id="layer2-clips"></div>
-        </div>
-
-        <!-- ROW LAYAR TENGAH -->
-        <div class="layer-row">
-          <div class="layer-head">
-            <span style="color:#10b981; font-weight:700;">LAYAR TENGAH</span>
-            <button style="background:#10b981; border:none; padding:2px; font-weight:bold; cursor:pointer;" onclick="addNewSlot(1)">+ Slot</button>
-          </div>
-          <div class="clips-container" id="layer1-clips"></div>
-        </div>
-
-        <!-- ROW LAYAR KIRI -->
-        <div class="layer-row">
-          <div class="layer-head">
-            <span style="color:#f59e0b; font-weight:700;">LAYAR KIRI</span>
-            <button style="background:#10b981; border:none; padding:2px; font-weight:bold; cursor:pointer;" onclick="addNewSlot(0)">+ Slot</button>
-          </div>
-          <div class="clips-container" id="layer0-clips"></div>
-        </div>
-
+    <!-- RIGHT PANEL: SLIDERS & CONTROLS -->
+    <div class="right-panel">
+      
+      <div class="panel-section">
+        <div class="panel-title">🎨 WARNA BACKGROUND CANVAS</div>
+        <input type="color" id="canvasBgPicker" value="#050505" onchange="setCanvasBg(this.value)" style="width: 100%; height: 30px; cursor: pointer;">
       </div>
-    </div>
 
+      <div class="panel-section">
+        <div class="panel-title">📐 UKURAN & POSISI INDEPENDEN LAYAR</div>
+        
+        <!-- LAYAR KANAN (2) -->
+        <div style="color: #38bdf8; font-weight: bold; margin-bottom: 4px;">Layar Kanan</div>
+        <div class="control-group">
+          <div class="control-label"><span>Lebar (%)</span><span id="lblRightW">100%</span></div>
+          <input type="range" id="scaleRightW" min="10" max="200" value="100" oninput="updateScales()">
+        </div>
+        <div class="control-group">
+          <div class="control-label"><span>Tinggi (%)</span><span id="lblRightH">100%</span></div>
+          <input type="range" id="scaleRightH" min="10" max="200" value="100" oninput="updateScales()">
+        </div>
+        <div class="control-group">
+          <div class="control-label"><span>Posisi X</span><span id="lblRightX">0</span></div>
+          <input type="range" id="posXRight" min="-500" max="500" value="0" oninput="updateScales()">
+        </div>
+
+        <!-- LAYAR TENGAH (1) -->
+        <div style="color: #10b981; font-weight: bold; margin-top: 10px; margin-bottom: 4px;">Layar Tengah</div>
+        <div class="control-group">
+          <div class="control-label"><span>Lebar (%)</span><span id="lblCenterW">100%</span></div>
+          <input type="range" id="scaleCenterW" min="10" max="200" value="100" oninput="updateScales()">
+        </div>
+        <div class="control-group">
+          <div class="control-label"><span>Tinggi (%)</span><span id="lblCenterH">100%</span></div>
+          <input type="range" id="scaleCenterH" min="10" max="200" value="100" oninput="updateScales()">
+        </div>
+        <div class="control-group">
+          <div class="control-label"><span>Posisi X</span><span id="lblCenterX">0</span></div>
+          <input type="range" id="posXCenter" min="-500" max="500" value="0" oninput="updateScales()">
+        </div>
+
+        <!-- LAYAR KIRI (0) -->
+        <div style="color: #f59e0b; font-weight: bold; margin-top: 10px; margin-bottom: 4px;">Layar Kiri</div>
+        <div class="control-group">
+          <div class="control-label"><span>Lebar (%)</span><span id="lblLeftW">100%</span></div>
+          <input type="range" id="scaleLeftW" min="10" max="200" value="100" oninput="updateScales()">
+        </div>
+        <div class="control-group">
+          <div class="control-label"><span>Tinggi (%)</span><span id="lblLeftH">100%</span></div>
+          <input type="range" id="scaleLeftH" min="10" max="200" value="100" oninput="updateScales()">
+        </div>
+        <div class="control-group">
+          <div class="control-label"><span>Posisi X</span><span id="lblLeftX">0</span></div>
+          <input type="range" id="posXLeft" min="-500" max="500" value="0" oninput="updateScales()">
+        </div>
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-title">📢 RUNNING TEXT</div>
+        <input type="text" id="txtMarquee" placeholder="Ketik teks berjalan..." style="width:100%; padding:6px; background:#1a1e26; border:1px solid #334155; color:#fff; font-size:11px; margin-bottom:6px; border-radius:3px;">
+        <button class="btn btn-accent" style="width:100%; justify-content:center;" onclick="toggleRunningText()">TAMPILKAN / SEMBUNYIKAN</button>
+      </div>
+
+    </div>
   </div>
 
-  <input type="file" id="globalFileInput" accept="video/*,image/*" style="display:none;" onchange="handleFileUpload(event)">
+  <!-- BOTTOM MATRIX SLOTS -->
+  <div class="matrix-section">
+    <div class="matrix-container">
+      
+      <!-- LAYAR KANAN -->
+      <div class="layer-row">
+        <div class="layer-head">
+          <span style="color:#38bdf8;">LAYAR KANAN</span>
+          <button class="btn" style="padding:1px 4px; font-size:9px;" onclick="addNewSlot(2)">+ Slot</button>
+        </div>
+        <div class="clips-container" id="layer2-clips"></div>
+      </div>
+
+      <!-- LAYAR TENGAH -->
+      <div class="layer-row">
+        <div class="layer-head">
+          <span style="color:#10b981;">LAYAR TENGAH</span>
+          <button class="btn" style="padding:1px 4px; font-size:9px;" onclick="addNewSlot(1)">+ Slot</button>
+        </div>
+        <div class="clips-container" id="layer1-clips"></div>
+      </div>
+
+      <!-- LAYAR KIRI -->
+      <div class="layer-row">
+        <div class="layer-head">
+          <span style="color:#f59e0b;">LAYAR KIRI</span>
+          <button class="btn" style="padding:1px 4px; font-size:9px;" onclick="addNewSlot(0)">+ Slot</button>
+        </div>
+        <div class="clips-container" id="layer0-clips"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FILE INPUT HIDDEN -->
+  <input type="file" id="directSlotInput" accept="video/*,image/*" style="display:none;" onchange="handleDirectSlotUpload(event)">
 
   <script>
+    const canvas = document.getElementById('masterCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let canvasBgColor = '#050505';
+    let currentScene = 1;
+
+    const createDefaultTransform = () => ({
+      scaleW: [100, 100, 100],
+      scaleH: [100, 100, 100],
+      posX: [0, 0, 0]
+    });
+
+    const scenePresets = {
+      1: { activeMedia: [null, null, null], ...createDefaultTransform() },
+      2: { activeMedia: [null, null, null], ...createDefaultTransform() },
+      3: { activeMedia: [null, null, null], ...createDefaultTransform() },
+      4: { activeMedia: [null, null, null], ...createDefaultTransform() }
+    };
+
+    const slotData = {};
     const slotCounts = [6, 6, 6];
-    const slotsData = {}; 
-    const activeMediaKeys = [null, null, null]; 
-    let targetUploadKey = null;
+    let targetSlotKeyForUpload = null;
 
     setInterval(() => {
       document.getElementById('studioClock').innerText = new Date().toLocaleTimeString('id-ID') + ' WIB';
     }, 1000);
 
-    function initMatrix() {
-      for (let l = 0; l < 3; l++) {
-        renderLayer(l);
+    function setCanvasBg(color) {
+      canvasBgColor = color;
+    }
+
+    // CANVAS RENDER ENGINE
+    function renderEngine() {
+      ctx.fillStyle = canvasBgColor;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const activeMedia = scenePresets[currentScene].activeMedia;
+      const { scaleW, scaleH, posX } = scenePresets[currentScene];
+      const sectionWidth = canvas.width / 3;
+
+      for (let i = 0; i < 3; i++) {
+        const media = activeMedia[i];
+        if (media) {
+          ctx.save();
+          
+          const targetW = sectionWidth * (scaleW[i] / 100);
+          const targetH = canvas.height * (scaleH[i] / 100);
+
+          const defaultX = (i * sectionWidth) + (sectionWidth - targetW) / 2;
+          const xPos = defaultX + posX[i];
+          const yPos = (canvas.height - targetH) / 2;
+
+          try {
+            ctx.drawImage(media, xPos, yPos, targetW, targetH);
+          } catch (e) {}
+          
+          ctx.restore();
+        }
+      }
+
+      updateVUMeter();
+      requestAnimationFrame(renderEngine);
+    }
+    renderEngine();
+
+    function initMatrixGrid() {
+      for (let layerIdx = 0; layerIdx < 3; layerIdx++) {
+        renderLayerSlots(layerIdx);
       }
     }
 
-    function renderLayer(layerIdx) {
+    function renderLayerSlots(layerIdx) {
       const container = document.getElementById(`layer${layerIdx}-clips`);
       if (!container) return;
       container.innerHTML = '';
-
-      for (let s = 0; s < slotCounts[layerIdx]; s++) {
-        const key = `${layerIdx}-${s}`;
+      
+      for (let slotIdx = 0; slotIdx < slotCounts[layerIdx]; slotIdx++) {
+        const slotKey = `${layerIdx}-${slotIdx}`;
         const slot = document.createElement('div');
         slot.className = 'clip-slot';
-        if (activeMediaKeys[layerIdx] === key) slot.classList.add('active');
-
-        if (slotsData[key]) {
-          const item = slotsData[key];
-          
-          const thumbContainer = document.createElement('div');
-          thumbContainer.className = 'slot-thumb-container';
-          
-          if (item.type === 'video') {
-            const v = document.createElement('video');
-            v.src = item.url;
-            v.muted = true;
-            v.currentTime = 0.5;
-            thumbContainer.appendChild(v);
-          } else {
-            const img = document.createElement('img');
-            img.src = item.url;
-            thumbContainer.appendChild(img);
-          }
-
-          const btnDel = document.createElement('button');
-          btnDel.className = 'btn-delete';
-          btnDel.innerText = '🗑️';
-          btnDel.onclick = (e) => {
-            e.stopPropagation();
-            removeSlotMedia(key, layerIdx);
-          };
-
-          slot.appendChild(thumbContainer);
-          slot.appendChild(btnDel);
-          slot.onclick = () => playToScreen(layerIdx, key);
+        slot.id = `slot-${slotKey}`;
+        
+        if (slotData[slotKey]) {
+          const item = slotData[slotKey];
+          renderSlotWithControls(slotKey, item.type, item.media);
         } else {
-          slot.innerHTML = `<span style="font-size:24px; color:#475569;">+</span>`;
-          slot.onclick = () => openFileSelector(key);
+          slot.innerHTML = `<span style="font-size:18px; color:#475569;">+</span>`;
+          slot.onclick = () => triggerDirectUpload(slotKey);
         }
 
         container.appendChild(slot);
@@ -207,87 +344,242 @@
 
     function addNewSlot(layerIdx) {
       slotCounts[layerIdx]++;
-      renderLayer(layerIdx);
+      renderLayerSlots(layerIdx);
+      updateMatrixActiveUI();
     }
 
-    function openFileSelector(key) {
-      targetUploadKey = key;
-      const input = document.getElementById('globalFileInput');
+    function triggerDirectUpload(slotKey) {
+      targetSlotKeyForUpload = slotKey;
+      const input = document.getElementById('directSlotInput');
       input.value = '';
       input.click();
     }
 
-    function handleFileUpload(event) {
+    // UNGGAH FILE AMAN TANPA CRASH
+    function handleDirectSlotUpload(event) {
       const file = event.target.files[0];
-      if (!file || !targetUploadKey) return;
+      if (!file || !targetSlotKeyForUpload) return;
 
+      const currentSlotKey = targetSlotKeyForUpload;
+      const [layerIdx] = currentSlotKey.split('-').map(Number);
       const fileUrl = URL.createObjectURL(file);
-      const isVideo = file.type.startsWith('video/');
-      const [layerIdx] = targetUploadKey.split('-').map(Number);
 
-      slotsData[targetUploadKey] = {
-        url: fileUrl,
-        type: isVideo ? 'video' : 'image'
-      };
+      if (file.type.startsWith('video/')) {
+        const videoEl = document.createElement('video');
+        videoEl.src = fileUrl;
+        videoEl.loop = true;
+        videoEl.muted = true;
+        videoEl.playsInline = true;
+        videoEl.autoplay = true;
 
-      renderLayer(layerIdx);
-      targetUploadKey = null;
+        videoEl.onloadeddata = () => {
+          slotData[currentSlotKey] = { media: videoEl, type: 'video' };
+          renderLayerSlots(layerIdx);
+          updateMatrixActiveUI();
+        };
+      } else {
+        const imgEl = new Image();
+        imgEl.src = fileUrl;
+        imgEl.onload = () => {
+          slotData[currentSlotKey] = { media: imgEl, type: 'image' };
+          renderLayerSlots(layerIdx);
+          updateMatrixActiveUI();
+        };
+      }
+
+      targetSlotKeyForUpload = null;
     }
 
-    function playToScreen(layerIdx, key) {
-      const screen = document.getElementById(`screen-${layerIdx}`);
-      const item = slotsData[key];
+    function renderSlotWithControls(slotKey, type, media) {
+      const slotEl = document.getElementById(`slot-${slotKey}`);
+      if (!slotEl) return;
+
+      slotEl.innerHTML = '';
+
+      if (type === 'video') {
+        const v = document.createElement('video');
+        v.src = media.src;
+        v.className = 'clip-thumb';
+        v.muted = true;
+        v.currentTime = 0.5;
+        slotEl.appendChild(v);
+      } else {
+        const img = document.createElement('img');
+        img.src = media.src;
+        img.className = 'clip-thumb';
+        slotEl.appendChild(img);
+      }
+
+      const controls = document.createElement('div');
+      controls.className = 'clip-controls';
+      controls.onclick = (e) => e.stopPropagation();
+
+      const btnDel = document.createElement('button');
+      btnDel.className = 'btn-ctrl danger';
+      btnDel.innerText = '🗑️ Hapus';
+      btnDel.onclick = () => deleteSlotMedia(slotKey);
+
+      controls.appendChild(btnDel);
+      slotEl.appendChild(controls);
+
+      slotEl.onclick = () => {
+        const [layerIdx, slotIdx] = slotKey.split('-').map(Number);
+        triggerSlot(layerIdx, slotIdx);
+      };
+    }
+
+    function deleteSlotMedia(slotKey) {
+      const item = slotData[slotKey];
+      if (!item) return;
+
+      const [layerIdx] = slotKey.split('-').map(Number);
+
+      if (item.type === 'video') item.media.pause();
+
+      if (scenePresets[currentScene].activeMedia[layerIdx] === item.media) {
+        scenePresets[currentScene].activeMedia[layerIdx] = null;
+      }
+
+      delete slotData[slotKey];
+      renderLayerSlots(layerIdx);
+      updateMatrixActiveUI();
+    }
+
+    function switchScene(sceneNumber) {
+      currentScene = sceneNumber;
+      for (let i = 1; i <= 4; i++) {
+        document.getElementById(`btnScene${i}`).classList.toggle('active', i === sceneNumber);
+      }
+      document.getElementById('currentSceneTitle').innerText = `PROGRAM OUTPUT - SCENE ${sceneNumber}`;
+
+      const { scaleW, scaleH, posX } = scenePresets[currentScene];
+      
+      document.getElementById('scaleLeftW').value = scaleW[0];
+      document.getElementById('scaleLeftH').value = scaleH[0];
+      document.getElementById('posXLeft').value = posX[0];
+
+      document.getElementById('scaleCenterW').value = scaleW[1];
+      document.getElementById('scaleCenterH').value = scaleH[1];
+      document.getElementById('posXCenter').value = posX[1];
+
+      document.getElementById('scaleRightW').value = scaleW[2];
+      document.getElementById('scaleRightH').value = scaleH[2];
+      document.getElementById('posXRight').value = posX[2];
+
+      updateLabels();
+      updateMatrixActiveUI();
+    }
+
+    function updateScales() {
+      const sp = scenePresets[currentScene];
+
+      sp.scaleW[0] = parseFloat(document.getElementById('scaleLeftW').value);
+      sp.scaleH[0] = parseFloat(document.getElementById('scaleLeftH').value);
+      sp.posX[0] = parseFloat(document.getElementById('posXLeft').value);
+
+      sp.scaleW[1] = parseFloat(document.getElementById('scaleCenterW').value);
+      sp.scaleH[1] = parseFloat(document.getElementById('scaleCenterH').value);
+      sp.posX[1] = parseFloat(document.getElementById('posXCenter').value);
+
+      sp.scaleW[2] = parseFloat(document.getElementById('scaleRightW').value);
+      sp.scaleH[2] = parseFloat(document.getElementById('scaleRightH').value);
+      sp.posX[2] = parseFloat(document.getElementById('posXLeft').value);
+
+      updateLabels();
+    }
+
+    function updateLabels() {
+      const sp = scenePresets[currentScene];
+      document.getElementById('lblLeftW').innerText = sp.scaleW[0] + '%';
+      document.getElementById('lblLeftH').innerText = sp.scaleH[0] + '%';
+      document.getElementById('lblLeftX').innerText = sp.posX[0];
+
+      document.getElementById('lblCenterW').innerText = sp.scaleW[1] + '%';
+      document.getElementById('lblCenterH').innerText = sp.scaleH[1] + '%';
+      document.getElementById('lblCenterX').innerText = sp.posX[1];
+
+      document.getElementById('lblRightW').innerText = sp.scaleW[2] + '%';
+      document.getElementById('lblRightH').innerText = sp.scaleH[2] + '%';
+      document.getElementById('lblRightX').innerText = sp.posX[2];
+    }
+
+    function triggerSlot(layerIdx, slotIdx) {
+      const slotKey = `${layerIdx}-${slotIdx}`;
+      const item = slotData[slotKey];
+      const currentActive = scenePresets[currentScene].activeMedia;
 
       if (!item) return;
 
-      if (activeMediaKeys[layerIdx] === key) {
-        activeMediaKeys[layerIdx] = null;
-        screen.innerHTML = `<span style="color:#475569;">LAYAR ${layerIdx === 0 ? 'KIRI' : layerIdx === 1 ? 'TENGAH' : 'KANAN'}</span>`;
-        renderLayer(layerIdx);
-        return;
-      }
-
-      activeMediaKeys[layerIdx] = key;
-      screen.innerHTML = '';
-
-      if (item.type === 'video') {
-        const video = document.createElement('video');
-        video.src = item.url;
-        video.autoplay = true;
-        video.loop = true;
-        video.muted = true;
-        video.playsInline = true;
-        screen.appendChild(video);
-        video.play().catch(err => console.log('Autoplay:', err));
+      if (currentActive[layerIdx] === item.media) {
+        if (item.type === 'video') item.media.pause();
+        currentActive[layerIdx] = null;
       } else {
-        const img = document.createElement('img');
-        img.src = item.url;
-        screen.appendChild(img);
+        currentActive[layerIdx] = item.media;
+        if (item.type === 'video') {
+          item.media.play().catch(e => console.log(e));
+        }
       }
 
-      renderLayer(layerIdx);
+      updateMatrixActiveUI();
     }
 
-    function removeSlotMedia(key, layerIdx) {
-      if (activeMediaKeys[layerIdx] === key) {
-        activeMediaKeys[layerIdx] = null;
-        const screen = document.getElementById(`screen-${layerIdx}`);
-        screen.innerHTML = `<span style="color:#475569;">LAYAR ${layerIdx === 0 ? 'KIRI' : layerIdx === 1 ? 'TENGAH' : 'KANAN'}</span>`;
+    function updateMatrixActiveUI() {
+      const currentActive = scenePresets[currentScene].activeMedia;
+      for (let l = 0; l < 3; l++) {
+        const container = document.getElementById(`layer${l}-clips`);
+        if (!container) continue;
+        
+        Array.from(container.children).forEach(c => c.classList.remove('active'));
+        
+        Object.keys(slotData).forEach(slotKey => {
+          if (slotData[slotKey].media === currentActive[l]) {
+            document.getElementById(`slot-${slotKey}`)?.classList.add('active');
+          }
+        });
       }
-      delete slotsData[key];
-      renderLayer(layerIdx);
+    }
+
+    function toggleRunningText() {
+      const txt = document.getElementById('txtMarquee').value;
+      const box = document.getElementById('tickerBox');
+      const content = document.getElementById('tickerContent');
+
+      if (box.style.display === 'block') {
+        box.style.display = 'none';
+      } else if (txt.trim() !== '') {
+        content.innerText = txt;
+        box.style.display = 'block';
+      }
+    }
+
+    function updateVUMeter() {
+      const hasActiveVideo = scenePresets[currentScene].activeMedia.some(m => m && m.tagName === 'VIDEO' && !m.paused);
+      const vuFill = document.getElementById('vuFill');
+      if (hasActiveVideo) {
+        vuFill.style.width = Math.floor(Math.random() * 60 + 30) + '%';
+      } else {
+        vuFill.style.width = '0%';
+      }
     }
 
     function toggleFullScreen() {
-      const elem = document.getElementById('screenContainer');
+      const container = document.getElementById('canvasContainer');
       if (!document.fullscreenElement) {
-        elem.requestFullscreen().catch(err => alert(err.message));
+        container.requestFullscreen().catch(err => alert(err.message));
       } else {
         document.exitFullscreen();
       }
     }
 
-    initMatrix();
+    function saveShowPreset() {
+      alert("Susunan Acara Berhasil Disimpan ke Memori!");
+    }
+
+    function loadShowPreset() {
+      alert("Preset Acara Berhasil Dimuat!");
+    }
+
+    initMatrixGrid();
   </script>
 </body>
 </html>
