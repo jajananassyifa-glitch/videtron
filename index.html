@@ -1,585 +1,472 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Grand El Hajj Studio - Fixed Engine</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      height: 100vh; background-color: #0f1115; color: #d1d5db;
-      display: flex; flex-direction: column; overflow: hidden; font-size: 11px;
-    }
+<script>
+  const canvas = document.getElementById('masterCanvas');
+  const ctx = canvas.getContext('2d');
 
-    /* HEADER */
-    header {
-      height: 42px; background: #161920; border-bottom: 1px solid #262b36;
-      display: flex; align-items: center; justify-content: space-between; padding: 0 12px;
-    }
-    .brand-section { display: flex; align-items: center; gap: 10px; }
-    .brand-logo { height: 24px; cursor: pointer; object-fit: contain; }
-    .brand-title { font-weight: 800; font-size: 13px; color: #10b981; letter-spacing: 1.5px; }
+  let hiddenPassword = localStorage.getItem('elhajj_password') || '1234';
+  let appLogoUrl = localStorage.getItem('elhajj_logo') || 'https://via.placeholder.com/300x150/161920/10b981?text=GRAND+EL+HAJJ';
+  let canvasBgColor = '#050505';
+  
+  let currentScene = 1;
+  
+  const createDefaultTransform = () => ({
+    scaleW: [100, 100, 100],
+    scaleH: [100, 100, 100],
+    posX: [0, 0, 0]
+  });
 
-    .header-controls { display: flex; align-items: center; gap: 8px; }
-    .btn {
-      background: #222733; color: #e2e8f0; border: 1px solid #334155;
-      padding: 4px 10px; font-size: 11px; border-radius: 4px; cursor: pointer;
-      font-weight: 600; display: inline-flex; align-items: center; gap: 5px;
-    }
-    .btn:hover { background: #2d3546; border-color: #475569; }
-    .btn-accent { background: #0284c7; color: #fff; border-color: #0369a1; }
-    .btn-accent:hover { background: #0369a1; }
-    
-    .scene-selector { display: flex; background: #0f1115; padding: 2px; border-radius: 4px; border: 1px solid #262b36; }
-    .btn-scene {
-      background: transparent; color: #94a3b8; border: none; padding: 3px 8px;
-      font-size: 10px; font-weight: 700; border-radius: 2px; cursor: pointer;
-    }
-    .btn-scene.active { background: #10b981; color: #000; }
+  const scenePresets = {
+    1: { activeMedia: [null, null, null], ...createDefaultTransform() },
+    2: { activeMedia: [null, null, null], ...createDefaultTransform() },
+    3: { activeMedia: [null, null, null], ...createDefaultTransform() },
+    4: { activeMedia: [null, null, null], ...createDefaultTransform() }
+  };
 
-    /* WORKSPACE */
-    .workspace { display: flex; flex: 1; height: calc(100vh - 42px); overflow: hidden; }
+  const slotData = {};
+  const slotCounts = [6, 6, 6];
+  let targetSlotKeyForUpload = null;
 
-    /* LEFT: CANVAS & SLIDERS */
-    .left-panel { flex: 1; display: flex; flex-direction: column; border-right: 1px solid #262b36; background: #0b0c10; }
-    
-    .canvas-header {
-      background: #161920; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center;
-      border-bottom: 1px solid #262b36; font-weight: 700; color: #38bdf8;
-    }
+  document.getElementById('appLogoImg').src = appLogoUrl;
 
-    .canvas-wrapper {
-      flex: 1; display: flex; align-items: center; justify-content: center; background: #050505;
-      position: relative; padding: 10px; overflow: hidden;
-    }
-    canvas { background: #000; box-shadow: 0 0 20px rgba(0,0,0,0.8); max-width: 100%; max-height: 100%; }
+  function openStudioApp() {
+    document.getElementById('splashScreen').style.display = 'none';
+  }
 
-    /* RIGHT: CONTROLS PANEL */
-    .right-panel { width: 320px; background: #11141a; border-left: 1px solid #262b36; display: flex; flex-direction: column; overflow-y: auto; }
-    .panel-section { padding: 12px; border-bottom: 1px solid #1e293b; }
-    .panel-title { font-size: 11px; font-weight: 700; color: #10b981; text-transform: uppercase; margin-bottom: 8px; display: flex; justify-content: space-between; }
+  setInterval(() => {
+    const now = new Date();
+    document.getElementById('studioClock').innerText = now.toLocaleTimeString('id-ID') + ' WIB';
+  }, 1000);
 
-    .control-group { margin-bottom: 8px; }
-    .control-label { display: flex; justify-content: space-between; margin-bottom: 2px; color: #94a3b8; font-size: 10px; }
-    input[type="range"] { width: 100%; accent-color: #10b981; cursor: pointer; }
+  function setCanvasBg(color) {
+    canvasBgColor = color;
+    document.getElementById('canvasBgPicker').value = color;
+  }
 
-    /* BOTTOM: MATRIX GRID */
-    .matrix-section { height: 200px; background: #0f1115; border-top: 1px solid #262b36; display: flex; flex-direction: column; }
-    .matrix-container { flex: 1; display: flex; flex-direction: column; padding: 6px; gap: 6px; overflow-y: auto; }
-    
-    .layer-row { display: flex; height: 52px; background: #161920; border: 1px solid #262b36; border-radius: 4px; align-items: center; }
-    .layer-head { width: 110px; padding: 6px; border-right: 1px solid #262b36; font-weight: 700; font-size: 10px; display: flex; flex-direction: column; gap: 4px; }
-    .clips-container { flex: 1; display: flex; gap: 6px; padding: 4px; overflow-x: auto; align-items: center; }
+  // ENGINE RENDERING CANVAS
+  function renderEngine() {
+    ctx.fillStyle = canvasBgColor;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    .clip-slot {
-      width: 64px; height: 42px; background: #1a1e26; border: 1px dashed #334155; border-radius: 3px;
-      cursor: pointer; position: relative; overflow: hidden; display: flex; flex-direction: column;
-      align-items: center; justify-content: center; flex-shrink: 0;
-    }
-    .clip-slot:hover { border-color: #10b981; }
-    .clip-slot.active { border: 2px solid #10b981; box-shadow: 0 0 8px rgba(16, 185, 129, 0.5); }
-    .clip-thumb { width: 100%; height: 100%; object-fit: cover; }
+    const activeMedia = scenePresets[currentScene].activeMedia;
+    const { scaleW, scaleH, posX } = scenePresets[currentScene];
+    const sectionWidth = canvas.width / 3;
 
-    .clip-controls {
-      position: absolute; inset: 0; background: rgba(0,0,0,0.7); display: flex; flex-direction: column;
-      align-items: center; justify-content: center; gap: 2px; opacity: 0; transition: opacity 0.2s;
-    }
-    .clip-slot:hover .clip-controls { opacity: 1; }
-    .btn-ctrl { background: #334155; color: #fff; border: none; font-size: 8px; padding: 2px 4px; border-radius: 2px; cursor: pointer; }
-    .btn-ctrl.danger { background: #ef4444; }
-
-    /* TICKER MARQUEE */
-    .ticker-box { background: #000; color: #fff; padding: 4px 0; overflow: hidden; white-space: nowrap; border-top: 1px solid #262b36; display: none; }
-    .ticker-text { display: inline-block; animation: marquee 15s linear infinite; font-size: 12px; font-weight: bold; }
-    @keyframes marquee { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
-
-    /* VU METER */
-    .vu-meter { height: 4px; background: #1e293b; width: 100%; overflow: hidden; }
-    .vu-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #10b981, #f59e0b, #ef4444); transition: width 0.1s; }
-  </style>
-</head>
-<body>
-
-  <!-- HEADER -->
-  <header>
-    <div class="brand-section">
-      <div class="brand-title" onclick="promptProtectedSettings()">GRAND EL HAJJ // STUDIO ENGINE</div>
-    </div>
-    
-    <div class="header-controls">
-      <div class="scene-selector">
-        <button class="btn-scene active" id="btnScene1" onclick="switchScene(1)">SCENE 1</button>
-        <button class="btn-scene" id="btnScene2" onclick="switchScene(2)">SCENE 2</button>
-        <button class="btn-scene" id="btnScene3" onclick="switchScene(3)">SCENE 3</button>
-        <button class="btn-scene" id="btnScene4" onclick="switchScene(4)">SCENE 4</button>
-      </div>
-
-      <button class="btn btn-accent" onclick="saveShowPreset()">💾 SIMPAN ACARA</button>
-      <button class="btn" onclick="loadShowPreset()">📂 BUKA ACARA</button>
-      <div style="font-family: monospace; font-size: 11px; color: #38bdf8; margin-left: 10px;" id="studioClock">00:00:00 WIB</div>
-    </div>
-  </header>
-
-  <!-- WORKSPACE MAIN -->
-  <div class="workspace">
-    
-    <!-- LEFT PANEL: CANVAS -->
-    <div class="left-panel">
-      <div class="canvas-header">
-        <span id="currentSceneTitle">PROGRAM OUTPUT - SCENE 1</span>
-        <div>
-          <button class="btn" onclick="toggleFullScreen()">🖥️ FULLSCREEN (1 LAYAR)</button>
-        </div>
-      </div>
-      
-      <div class="canvas-wrapper" id="canvasContainer">
-        <canvas id="masterCanvas" width="1280" height="720"></canvas>
-      </div>
-
-      <div class="vu-meter"><div class="vu-fill" id="vuFill"></div></div>
-
-      <div class="ticker-box" id="tickerBox">
-        <div class="ticker-text" id="tickerContent">---</div>
-      </div>
-    </div>
-
-    <!-- RIGHT PANEL: SLIDERS & CONTROLS -->
-    <div class="right-panel">
-      
-      <div class="panel-section">
-        <div class="panel-title">🎨 WARNA BACKGROUND CANVAS</div>
-        <input type="color" id="canvasBgPicker" value="#050505" onchange="setCanvasBg(this.value)" style="width: 100%; height: 30px; cursor: pointer;">
-      </div>
-
-      <div class="panel-section">
-        <div class="panel-title">📐 UKURAN & POSISI INDEPENDEN LAYAR</div>
+    for (let i = 0; i < 3; i++) {
+      const media = activeMedia[i];
+      if (media) {
+        ctx.save();
         
-        <!-- LAYAR KANAN (2) -->
-        <div style="color: #38bdf8; font-weight: bold; margin-bottom: 4px;">Layar Kanan</div>
-        <div class="control-group">
-          <div class="control-label"><span>Lebar (%)</span><span id="lblRightW">100%</span></div>
-          <input type="range" id="scaleRightW" min="10" max="200" value="100" oninput="updateScales()">
-        </div>
-        <div class="control-group">
-          <div class="control-label"><span>Tinggi (%)</span><span id="lblRightH">100%</span></div>
-          <input type="range" id="scaleRightH" min="10" max="200" value="100" oninput="updateScales()">
-        </div>
-        <div class="control-group">
-          <div class="control-label"><span>Posisi X</span><span id="lblRightX">0</span></div>
-          <input type="range" id="posXRight" min="-500" max="500" value="0" oninput="updateScales()">
-        </div>
+        const targetW = sectionWidth * (scaleW[i] / 100);
+        const targetH = canvas.height * (scaleH[i] / 100);
 
-        <!-- LAYAR TENGAH (1) -->
-        <div style="color: #10b981; font-weight: bold; margin-top: 10px; margin-bottom: 4px;">Layar Tengah</div>
-        <div class="control-group">
-          <div class="control-label"><span>Lebar (%)</span><span id="lblCenterW">100%</span></div>
-          <input type="range" id="scaleCenterW" min="10" max="200" value="100" oninput="updateScales()">
-        </div>
-        <div class="control-group">
-          <div class="control-label"><span>Tinggi (%)</span><span id="lblCenterH">100%</span></div>
-          <input type="range" id="scaleCenterH" min="10" max="200" value="100" oninput="updateScales()">
-        </div>
-        <div class="control-group">
-          <div class="control-label"><span>Posisi X</span><span id="lblCenterX">0</span></div>
-          <input type="range" id="posXCenter" min="-500" max="500" value="0" oninput="updateScales()">
-        </div>
+        const defaultX = (i * sectionWidth) + (sectionWidth - targetW) / 2;
+        const xPos = defaultX + posX[i];
+        const yPos = (canvas.height - targetH) / 2;
 
-        <!-- LAYAR KIRI (0) -->
-        <div style="color: #f59e0b; font-weight: bold; margin-top: 10px; margin-bottom: 4px;">Layar Kiri</div>
-        <div class="control-group">
-          <div class="control-label"><span>Lebar (%)</span><span id="lblLeftW">100%</span></div>
-          <input type="range" id="scaleLeftW" min="10" max="200" value="100" oninput="updateScales()">
-        </div>
-        <div class="control-group">
-          <div class="control-label"><span>Tinggi (%)</span><span id="lblLeftH">100%</span></div>
-          <input type="range" id="scaleLeftH" min="10" max="200" value="100" oninput="updateScales()">
-        </div>
-        <div class="control-group">
-          <div class="control-label"><span>Posisi X</span><span id="lblLeftX">0</span></div>
-          <input type="range" id="posXLeft" min="-500" max="500" value="0" oninput="updateScales()">
-        </div>
-      </div>
+        try {
+          ctx.drawImage(media, xPos, yPos, targetW, targetH);
+        } catch (e) {
+          // Mengabaikan error jika frame video/gambar belum siap
+        }
+        ctx.restore();
+      }
+    }
 
-      <div class="panel-section">
-        <div class="panel-title">📢 RUNNING TEXT</div>
-        <input type="text" id="txtMarquee" placeholder="Ketik teks berjalan..." style="width:100%; padding:6px; background:#1a1e26; border:1px solid #334155; color:#fff; font-size:11px; margin-bottom:6px; border-radius:3px;">
-        <button class="btn btn-accent" style="width:100%; justify-content:center;" onclick="toggleRunningText()">TAMPILKAN / SEMBUNYIKAN</button>
-      </div>
+    updateVUMeter();
+    requestAnimationFrame(renderEngine);
+  }
+  renderEngine();
 
-    </div>
-  </div>
+  function initMatrixGrid() {
+    for (let layerIdx = 0; layerIdx < 3; layerIdx++) {
+      renderLayerSlots(layerIdx);
+    }
+  }
 
-  <!-- BOTTOM MATRIX SLOTS -->
-  <div class="matrix-section">
-    <div class="matrix-container">
+  function renderLayerSlots(layerIdx) {
+    const container = document.getElementById(`layer${layerIdx}-clips`);
+    if (!container) return;
+    container.innerHTML = '';
+    
+    for (let slotIdx = 0; slotIdx < slotCounts[layerIdx]; slotIdx++) {
+      const slotKey = `${layerIdx}-${slotIdx}`;
+      const slot = document.createElement('div');
+      slot.className = 'clip-slot';
+      slot.id = `slot-${slotKey}`;
       
-      <!-- LAYAR KANAN -->
-      <div class="layer-row">
-        <div class="layer-head">
-          <span style="color:#38bdf8;">LAYAR KANAN</span>
-          <button class="btn" style="padding:1px 4px; font-size:9px;" onclick="addNewSlot(2)">+ Slot</button>
+      if (slotData[slotKey]) {
+        const item = slotData[slotKey];
+        renderSlotWithControls(slotKey, item.thumbUrl, item.media.tagName === 'VIDEO', item.media);
+      } else {
+        slot.innerHTML = `<span style="font-size:20px; color:#475569;">+</span>`;
+        slot.onclick = () => triggerDirectUpload(slotKey);
+      }
+
+      container.appendChild(slot);
+    }
+  }
+
+  function addNewSlot(layerIdx) {
+    slotCounts[layerIdx]++;
+    renderLayerSlots(layerIdx);
+    updateMatrixActiveUI();
+  }
+
+  function triggerDirectUpload(slotKey) {
+    targetSlotKeyForUpload = slotKey;
+    const input = document.getElementById('directSlotInput');
+    input.value = ''; // Reset input agar bisa upload file yang sama jika perlu
+    input.click();
+  }
+
+  // PENANGANAN FILE UPLOAD (TAMPILKAN GAMBAR/VIDEO SANGAT CEPAT)
+  async function handleDirectSlotUpload(event) {
+    const file = event.target.files[0];
+    if (!file || !targetSlotKeyForUpload) return;
+
+    const currentSlotKey = targetSlotKeyForUpload;
+    const [layerIdx] = currentSlotKey.split('-').map(Number);
+    const slotEl = document.getElementById(`slot-${currentSlotKey}`);
+    
+    if (slotEl) slotEl.innerHTML = `<span style="color:#10b981; font-size:10px;">Memuat...</span>`;
+
+    // Hapus media lama jika slot diisi ulang
+    if (slotData[currentSlotKey]) {
+      deleteSlotMedia(currentSlotKey, false);
+    }
+
+    const fileUrl = URL.createObjectURL(file);
+
+    if (file.type.startsWith('video/')) {
+      const videoEl = document.createElement('video');
+      videoEl.src = fileUrl;
+      videoEl.loop = true;
+      videoEl.muted = true;
+      videoEl.playsInline = true;
+      videoEl.crossOrigin = "anonymous";
+
+      videoEl.onloadeddata = async () => {
+        let thumbUrl = '';
+        try {
+          thumbUrl = await generateVideoThumbnail(videoEl);
+        } catch (err) {
+          thumbUrl = fileUrl; // Fallback jika thumbnail gagal dibuat
+        }
+
+        slotData[currentSlotKey] = { media: videoEl, thumbUrl: thumbUrl || fileUrl, objectUrl: fileUrl };
+        renderLayerSlots(layerIdx);
+        updateMatrixActiveUI();
+      };
+
+      videoEl.onerror = () => {
+        alert("Format video tidak mendukung atau gagal dimuat.");
+        renderLayerSlots(layerIdx);
+      };
+    } else if (file.type.startsWith('image/')) {
+      const imgEl = new Image();
+      imgEl.src = fileUrl;
+      imgEl.onload = () => {
+        slotData[currentSlotKey] = { media: imgEl, thumbUrl: fileUrl, objectUrl: fileUrl };
+        renderLayerSlots(layerIdx);
+        updateMatrixActiveUI();
+      };
+      imgEl.onerror = () => {
+        alert("Gagal memuat gambar.");
+        renderLayerSlots(layerIdx);
+      };
+    } else {
+      alert("Tipe file tidak didukung! Harus berupa gambar atau video.");
+      renderLayerSlots(layerIdx);
+    }
+
+    targetSlotKeyForUpload = null;
+  }
+
+  function renderSlotWithControls(slotKey, imgUrl, isVideo, media) {
+    const slotEl = document.getElementById(`slot-${slotKey}`);
+    if (!slotEl) return;
+
+    let mediaPreviewHTML = '';
+    if (imgUrl) {
+      mediaPreviewHTML = `<img src="${imgUrl}" class="clip-thumb" style="width:100%; height:100%; object-fit:cover;" />`;
+    } else {
+      mediaPreviewHTML = `<div style="background:#1e293b; width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#10b981; font-weight:bold; font-size:10px;">${isVideo ? 'VIDEO' : 'GAMBAR'}</div>`;
+    }
+
+    let controlsHTML = '';
+    if (isVideo) {
+      controlsHTML = `
+        <div class="clip-controls" onclick="event.stopPropagation();">
+          <button class="btn-ctrl" onclick="togglePlayPause('${slotKey}', this)">${media.paused ? '▶ Play' : '⏸ Pause'}</button>
+          <button class="btn-ctrl ${media.loop ? 'active' : ''}" onclick="toggleLoop('${slotKey}', this)">🔁 Loop</button>
+          <button class="btn-ctrl danger" onclick="deleteSlotMedia('${slotKey}')">🗑️</button>
         </div>
-        <div class="clips-container" id="layer2-clips"></div>
-      </div>
-
-      <!-- LAYAR TENGAH -->
-      <div class="layer-row">
-        <div class="layer-head">
-          <span style="color:#10b981;">LAYAR TENGAH</span>
-          <button class="btn" style="padding:1px 4px; font-size:9px;" onclick="addNewSlot(1)">+ Slot</button>
+      `;
+    } else {
+      controlsHTML = `
+        <div class="clip-controls" onclick="event.stopPropagation();">
+          <span style="font-size:8px; color:#aaa;">Gambar</span>
+          <button class="btn-ctrl danger" onclick="deleteSlotMedia('${slotKey}')">🗑️</button>
         </div>
-        <div class="clips-container" id="layer1-clips"></div>
-      </div>
+      `;
+    }
 
-      <!-- LAYAR KIRI -->
-      <div class="layer-row">
-        <div class="layer-head">
-          <span style="color:#f59e0b;">LAYAR KIRI</span>
-          <button class="btn" style="padding:1px 4px; font-size:9px;" onclick="addNewSlot(0)">+ Slot</button>
-        </div>
-        <div class="clips-container" id="layer0-clips"></div>
-      </div>
+    slotEl.innerHTML = mediaPreviewHTML + controlsHTML;
 
-    </div>
-  </div>
+    slotEl.onclick = () => {
+      const layerIdx = parseInt(slotKey.split('-')[0]);
+      const slotIdx = parseInt(slotKey.split('-')[1]);
+      triggerSlot(layerIdx, slotIdx);
+    };
+  }
 
-  <!-- FILE INPUT HIDDEN -->
-  <input type="file" id="directSlotInput" accept="video/*,image/*" style="display:none;" onchange="handleDirectSlotUpload(event)">
+  function togglePlayPause(slotKey, btn) {
+    const item = slotData[slotKey];
+    if (item && item.media.tagName === 'VIDEO') {
+      if (item.media.paused) {
+        item.media.play();
+        btn.innerText = "⏸ Pause";
+      } else {
+        item.media.pause();
+        btn.innerText = "▶ Play";
+      }
+    }
+  }
 
-  <script>
-    const canvas = document.getElementById('masterCanvas');
-    const ctx = canvas.getContext('2d');
+  function toggleLoop(slotKey, btn) {
+    const item = slotData[slotKey];
+    if (item && item.media.tagName === 'VIDEO') {
+      item.media.loop = !item.media.loop;
+      btn.classList.toggle('active', item.media.loop);
+    }
+  }
 
-    let canvasBgColor = '#050505';
-    let currentScene = 1;
+  // PENANGANAN HAPUS SLOT MEDIA SECARA BERSIH
+  function deleteSlotMedia(slotKey, reRender = true) {
+    const item = slotData[slotKey];
+    if (!item) return;
 
-    const createDefaultTransform = () => ({
-      scaleW: [100, 100, 100],
-      scaleH: [100, 100, 100],
-      posX: [0, 0, 0]
+    const layerIdx = parseInt(slotKey.split('-')[0]);
+
+    // 1. Hentikan pemutaran video jika video sedang aktif
+    if (item.media.tagName === 'VIDEO') {
+      item.media.pause();
+      item.media.currentTime = 0;
+      item.media.src = '';
+      item.media.load();
+    }
+
+    // 2. Lepas dari layar scene yang sedang aktif
+    Object.keys(scenePresets).forEach(sKey => {
+      if (scenePresets[sKey].activeMedia[layerIdx] === item.media) {
+        scenePresets[sKey].activeMedia[layerIdx] = null;
+      }
     });
 
-    const scenePresets = {
-      1: { activeMedia: [null, null, null], ...createDefaultTransform() },
-      2: { activeMedia: [null, null, null], ...createDefaultTransform() },
-      3: { activeMedia: [null, null, null], ...createDefaultTransform() },
-      4: { activeMedia: [null, null, null], ...createDefaultTransform() }
-    };
-
-    const slotData = {};
-    const slotCounts = [6, 6, 6];
-    let targetSlotKeyForUpload = null;
-
-    setInterval(() => {
-      document.getElementById('studioClock').innerText = new Date().toLocaleTimeString('id-ID') + ' WIB';
-    }, 1000);
-
-    function setCanvasBg(color) {
-      canvasBgColor = color;
+    // 3. Bebaskan memori browser (Revoke ObjectURL)
+    if (item.objectUrl) {
+      URL.revokeObjectURL(item.objectUrl);
     }
 
-    // CANVAS RENDER ENGINE
-    function renderEngine() {
-      ctx.fillStyle = canvasBgColor;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // 4. Hapus data slot
+    delete slotData[slotKey];
 
-      const activeMedia = scenePresets[currentScene].activeMedia;
-      const { scaleW, scaleH, posX } = scenePresets[currentScene];
-      const sectionWidth = canvas.width / 3;
-
-      for (let i = 0; i < 3; i++) {
-        const media = activeMedia[i];
-        if (media) {
-          ctx.save();
-          
-          const targetW = sectionWidth * (scaleW[i] / 100);
-          const targetH = canvas.height * (scaleH[i] / 100);
-
-          const defaultX = (i * sectionWidth) + (sectionWidth - targetW) / 2;
-          const xPos = defaultX + posX[i];
-          const yPos = (canvas.height - targetH) / 2;
-
-          try {
-            ctx.drawImage(media, xPos, yPos, targetW, targetH);
-          } catch (e) {}
-          
-          ctx.restore();
-        }
-      }
-
-      updateVUMeter();
-      requestAnimationFrame(renderEngine);
-    }
-    renderEngine();
-
-    function initMatrixGrid() {
-      for (let layerIdx = 0; layerIdx < 3; layerIdx++) {
-        renderLayerSlots(layerIdx);
-      }
-    }
-
-    function renderLayerSlots(layerIdx) {
-      const container = document.getElementById(`layer${layerIdx}-clips`);
-      if (!container) return;
-      container.innerHTML = '';
-      
-      for (let slotIdx = 0; slotIdx < slotCounts[layerIdx]; slotIdx++) {
-        const slotKey = `${layerIdx}-${slotIdx}`;
-        const slot = document.createElement('div');
-        slot.className = 'clip-slot';
-        slot.id = `slot-${slotKey}`;
-        
-        if (slotData[slotKey]) {
-          const item = slotData[slotKey];
-          renderSlotWithControls(slotKey, item.type, item.media);
-        } else {
-          slot.innerHTML = `<span style="font-size:18px; color:#475569;">+</span>`;
-          slot.onclick = () => triggerDirectUpload(slotKey);
-        }
-
-        container.appendChild(slot);
-      }
-    }
-
-    function addNewSlot(layerIdx) {
-      slotCounts[layerIdx]++;
+    // 5. Render ulang tampilan slot
+    if (reRender) {
       renderLayerSlots(layerIdx);
       updateMatrixActiveUI();
     }
+  }
 
-    function triggerDirectUpload(slotKey) {
-      targetSlotKeyForUpload = slotKey;
-      const input = document.getElementById('directSlotInput');
-      input.value = '';
-      input.click();
-    }
-
-    // UNGGAH FILE AMAN TANPA CRASH
-    function handleDirectSlotUpload(event) {
-      const file = event.target.files[0];
-      if (!file || !targetSlotKeyForUpload) return;
-
-      const currentSlotKey = targetSlotKeyForUpload;
-      const [layerIdx] = currentSlotKey.split('-').map(Number);
-      const fileUrl = URL.createObjectURL(file);
-
-      if (file.type.startsWith('video/')) {
-        const videoEl = document.createElement('video');
-        videoEl.src = fileUrl;
-        videoEl.loop = true;
-        videoEl.muted = true;
-        videoEl.playsInline = true;
-        videoEl.autoplay = true;
-
-        videoEl.onloadeddata = () => {
-          slotData[currentSlotKey] = { media: videoEl, type: 'video' };
-          renderLayerSlots(layerIdx);
-          updateMatrixActiveUI();
-        };
-      } else {
-        const imgEl = new Image();
-        imgEl.src = fileUrl;
-        imgEl.onload = () => {
-          slotData[currentSlotKey] = { media: imgEl, type: 'image' };
-          renderLayerSlots(layerIdx);
-          updateMatrixActiveUI();
-        };
-      }
-
-      targetSlotKeyForUpload = null;
-    }
-
-    function renderSlotWithControls(slotKey, type, media) {
-      const slotEl = document.getElementById(`slot-${slotKey}`);
-      if (!slotEl) return;
-
-      slotEl.innerHTML = '';
-
-      if (type === 'video') {
-        const v = document.createElement('video');
-        v.src = media.src;
-        v.className = 'clip-thumb';
-        v.muted = true;
-        v.currentTime = 0.5;
-        slotEl.appendChild(v);
-      } else {
-        const img = document.createElement('img');
-        img.src = media.src;
-        img.className = 'clip-thumb';
-        slotEl.appendChild(img);
-      }
-
-      const controls = document.createElement('div');
-      controls.className = 'clip-controls';
-      controls.onclick = (e) => e.stopPropagation();
-
-      const btnDel = document.createElement('button');
-      btnDel.className = 'btn-ctrl danger';
-      btnDel.innerText = '🗑️ Hapus';
-      btnDel.onclick = () => deleteSlotMedia(slotKey);
-
-      controls.appendChild(btnDel);
-      slotEl.appendChild(controls);
-
-      slotEl.onclick = () => {
-        const [layerIdx, slotIdx] = slotKey.split('-').map(Number);
-        triggerSlot(layerIdx, slotIdx);
+  function generateVideoThumbnail(videoEl) {
+    return new Promise((resolve) => {
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = 160; 
+      tempCanvas.height = 90;
+      const tempCtx = tempCanvas.getContext('2d');
+      
+      const capture = () => {
+        try {
+          tempCtx.drawImage(videoEl, 0, 0, tempCanvas.width, tempCanvas.height);
+          resolve(tempCanvas.toDataURL('image/jpeg'));
+        } catch (e) {
+          resolve('');
+        }
       };
-    }
 
-    function deleteSlotMedia(slotKey) {
-      const item = slotData[slotKey];
-      if (!item) return;
-
-      const [layerIdx] = slotKey.split('-').map(Number);
-
-      if (item.type === 'video') item.media.pause();
-
-      if (scenePresets[currentScene].activeMedia[layerIdx] === item.media) {
-        scenePresets[currentScene].activeMedia[layerIdx] = null;
-      }
-
-      delete slotData[slotKey];
-      renderLayerSlots(layerIdx);
-      updateMatrixActiveUI();
-    }
-
-    function switchScene(sceneNumber) {
-      currentScene = sceneNumber;
-      for (let i = 1; i <= 4; i++) {
-        document.getElementById(`btnScene${i}`).classList.toggle('active', i === sceneNumber);
-      }
-      document.getElementById('currentSceneTitle').innerText = `PROGRAM OUTPUT - SCENE ${sceneNumber}`;
-
-      const { scaleW, scaleH, posX } = scenePresets[currentScene];
-      
-      document.getElementById('scaleLeftW').value = scaleW[0];
-      document.getElementById('scaleLeftH').value = scaleH[0];
-      document.getElementById('posXLeft').value = posX[0];
-
-      document.getElementById('scaleCenterW').value = scaleW[1];
-      document.getElementById('scaleCenterH').value = scaleH[1];
-      document.getElementById('posXCenter').value = posX[1];
-
-      document.getElementById('scaleRightW').value = scaleW[2];
-      document.getElementById('scaleRightH').value = scaleH[2];
-      document.getElementById('posXRight').value = posX[2];
-
-      updateLabels();
-      updateMatrixActiveUI();
-    }
-
-    function updateScales() {
-      const sp = scenePresets[currentScene];
-
-      sp.scaleW[0] = parseFloat(document.getElementById('scaleLeftW').value);
-      sp.scaleH[0] = parseFloat(document.getElementById('scaleLeftH').value);
-      sp.posX[0] = parseFloat(document.getElementById('posXLeft').value);
-
-      sp.scaleW[1] = parseFloat(document.getElementById('scaleCenterW').value);
-      sp.scaleH[1] = parseFloat(document.getElementById('scaleCenterH').value);
-      sp.posX[1] = parseFloat(document.getElementById('posXCenter').value);
-
-      sp.scaleW[2] = parseFloat(document.getElementById('scaleRightW').value);
-      sp.scaleH[2] = parseFloat(document.getElementById('scaleRightH').value);
-      sp.posX[2] = parseFloat(document.getElementById('posXLeft').value);
-
-      updateLabels();
-    }
-
-    function updateLabels() {
-      const sp = scenePresets[currentScene];
-      document.getElementById('lblLeftW').innerText = sp.scaleW[0] + '%';
-      document.getElementById('lblLeftH').innerText = sp.scaleH[0] + '%';
-      document.getElementById('lblLeftX').innerText = sp.posX[0];
-
-      document.getElementById('lblCenterW').innerText = sp.scaleW[1] + '%';
-      document.getElementById('lblCenterH').innerText = sp.scaleH[1] + '%';
-      document.getElementById('lblCenterX').innerText = sp.posX[1];
-
-      document.getElementById('lblRightW').innerText = sp.scaleW[2] + '%';
-      document.getElementById('lblRightH').innerText = sp.scaleH[2] + '%';
-      document.getElementById('lblRightX').innerText = sp.posX[2];
-    }
-
-    function triggerSlot(layerIdx, slotIdx) {
-      const slotKey = `${layerIdx}-${slotIdx}`;
-      const item = slotData[slotKey];
-      const currentActive = scenePresets[currentScene].activeMedia;
-
-      if (!item) return;
-
-      if (currentActive[layerIdx] === item.media) {
-        if (item.type === 'video') item.media.pause();
-        currentActive[layerIdx] = null;
+      if (videoEl.readyState >= 2) {
+        capture();
       } else {
-        currentActive[layerIdx] = item.media;
-        if (item.type === 'video') {
-          item.media.play().catch(e => console.log(e));
+        videoEl.onloadeddata = capture;
+        setTimeout(() => resolve(''), 1000);
+      }
+    });
+  }
+
+  function toggleFullScreen() {
+    const container = document.getElementById('canvasContainer');
+    if (!document.fullscreenElement) {
+      container.requestFullscreen().catch(err => {
+        alert(`Gagal masuk Fullscreen: ${err.message}`);
+      });
+    } else {
+      document.exitFullscreen();
+    }
+  }
+
+  function promptProtectedSettings() {
+    const inputPass = prompt("Masukkan Password Tersembunyi Dashboard:");
+    if (inputPass === hiddenPassword) {
+      document.getElementById('settingsModal').style.display = 'flex';
+    } else if (inputPass !== null) {
+      alert("Password Salah! Akses Ditolak.");
+    }
+  }
+
+  function closeSettingsModal() {
+    document.getElementById('settingsModal').style.display = 'none';
+  }
+
+  function updateLogoFromFile(event) {
+    const file = event.target.files[0];
+    if (file) {
+      const logoUrl = URL.createObjectURL(file);
+      appLogoUrl = logoUrl;
+      document.getElementById('appLogoImg').src = logoUrl;
+      localStorage.setItem('elhajj_logo', logoUrl);
+    }
+  }
+
+  function saveHiddenSettings() {
+    const newPass = document.getElementById('newPasswordInput').value.trim();
+    if (newPass !== '') {
+      hiddenPassword = newPass;
+      localStorage.setItem('elhajj_password', newPass);
+      alert("Password Baru Berhasil Disimpan!");
+    }
+    closeSettingsModal();
+  }
+
+  function switchScene(sceneNumber) {
+    currentScene = sceneNumber;
+    for (let i = 1; i <= 4; i++) {
+      document.getElementById(`btnScene${i}`)?.classList.toggle('active', i === sceneNumber);
+    }
+    document.getElementById('currentSceneTitle').innerText = `PROGRAM OUTPUT - SCENE ${sceneNumber}`;
+
+    const { scaleW, scaleH, posX } = scenePresets[currentScene];
+    
+    document.getElementById('scaleLeftW').value = scaleW[0];
+    document.getElementById('scaleLeftH').value = scaleH[0];
+    document.getElementById('posXLeft').value = posX[0];
+
+    document.getElementById('scaleCenterW').value = scaleW[1];
+    document.getElementById('scaleCenterH').value = scaleH[1];
+    document.getElementById('posXCenter').value = posX[1];
+
+    document.getElementById('scaleRightW').value = scaleW[2];
+    document.getElementById('scaleRightH').value = scaleH[2];
+    document.getElementById('posXRight').value = posX[2];
+
+    updateMatrixActiveUI();
+  }
+
+  function updateScales() {
+    const sp = scenePresets[currentScene];
+
+    sp.scaleW[0] = parseFloat(document.getElementById('scaleLeftW').value);
+    sp.scaleH[0] = parseFloat(document.getElementById('scaleLeftH').value);
+    sp.posX[0] = parseFloat(document.getElementById('posXLeft').value);
+
+    sp.scaleW[1] = parseFloat(document.getElementById('scaleCenterW').value);
+    sp.scaleH[1] = parseFloat(document.getElementById('scaleCenterH').value);
+    sp.posX[1] = parseFloat(document.getElementById('posXCenter').value);
+
+    sp.scaleW[2] = parseFloat(document.getElementById('scaleRightW').value);
+    sp.scaleH[2] = parseFloat(document.getElementById('scaleRightH').value);
+    sp.posX[2] = parseFloat(document.getElementById('posXRight').value);
+  }
+
+  function triggerSlot(layerIdx, slotIdx) {
+    const slotKey = `${layerIdx}-${slotIdx}`;
+    const item = slotData[slotKey];
+    const currentActive = scenePresets[currentScene].activeMedia;
+
+    if (!item) return;
+
+    if (currentActive[layerIdx] === item.media) {
+      if (item.media.tagName === 'VIDEO') item.media.pause();
+      currentActive[layerIdx] = null;
+    } else {
+      currentActive[layerIdx] = item.media;
+      if (item.media.tagName === 'VIDEO') {
+        item.media.play().catch(e => console.log("Autoplay dicegah browser:", e));
+      }
+    }
+
+    updateMatrixActiveUI();
+  }
+
+  function updateMatrixActiveUI() {
+    const currentActive = scenePresets[currentScene].activeMedia;
+    for (let l = 0; l < 3; l++) {
+      const container = document.getElementById(`layer${l}-clips`);
+      if (!container) continue;
+      
+      Array.from(container.children).forEach(c => c.classList.remove('active'));
+      
+      Object.keys(slotData).forEach(slotKey => {
+        if (slotData[slotKey].media === currentActive[l]) {
+          document.getElementById(`slot-${slotKey}`)?.classList.add('active');
         }
-      }
-
-      updateMatrixActiveUI();
+      });
     }
+  }
 
-    function updateMatrixActiveUI() {
-      const currentActive = scenePresets[currentScene].activeMedia;
-      for (let l = 0; l < 3; l++) {
-        const container = document.getElementById(`layer${l}-clips`);
-        if (!container) continue;
-        
-        Array.from(container.children).forEach(c => c.classList.remove('active'));
-        
-        Object.keys(slotData).forEach(slotKey => {
-          if (slotData[slotKey].media === currentActive[l]) {
-            document.getElementById(`slot-${slotKey}`)?.classList.add('active');
-          }
-        });
-      }
+  function toggleRunningText() {
+    const txt = document.getElementById('txtMarquee').value;
+    const box = document.getElementById('tickerBox');
+    const content = document.getElementById('tickerContent');
+
+    if (box.style.display === 'block') {
+      box.style.display = 'none';
+    } else if (txt.trim() !== '') {
+      content.innerText = txt;
+      box.style.display = 'block';
     }
+  }
 
-    function toggleRunningText() {
-      const txt = document.getElementById('txtMarquee').value;
-      const box = document.getElementById('tickerBox');
-      const content = document.getElementById('tickerContent');
+  function setMasterVolume(val) {
+    Object.values(slotData).forEach(item => {
+      if (item.media.tagName === 'VIDEO') item.media.volume = val;
+    });
+  }
 
-      if (box.style.display === 'block') {
-        box.style.display = 'none';
-      } else if (txt.trim() !== '') {
-        content.innerText = txt;
-        box.style.display = 'block';
-      }
-    }
-
-    function updateVUMeter() {
-      const hasActiveVideo = scenePresets[currentScene].activeMedia.some(m => m && m.tagName === 'VIDEO' && !m.paused);
-      const vuFill = document.getElementById('vuFill');
+  function updateVUMeter() {
+    const hasActiveVideo = scenePresets[currentScene].activeMedia.some(m => m && m.tagName === 'VIDEO' && !m.paused);
+    const vuFill = document.getElementById('vuFill');
+    if (vuFill) {
       if (hasActiveVideo) {
         vuFill.style.width = Math.floor(Math.random() * 60 + 30) + '%';
       } else {
         vuFill.style.width = '0%';
       }
     }
+  }
 
-    function toggleFullScreen() {
-      const container = document.getElementById('canvasContainer');
-      if (!document.fullscreenElement) {
-        container.requestFullscreen().catch(err => alert(err.message));
-      } else {
-        document.exitFullscreen();
-      }
+  function saveShowPreset() {
+    localStorage.setItem('grand_elhajj_preset_pro', JSON.stringify(scenePresets));
+    alert("Susunan Acara Berhasil Disimpan!");
+  }
+
+  function loadShowPreset() {
+    const data = localStorage.getItem('grand_elhajj_preset_pro');
+    if (data) {
+      alert("Preset Scene Berhasil Dimuat!");
+    } else {
+      alert("Belum ada preset tersimpan.");
     }
+  }
 
-    function saveShowPreset() {
-      alert("Susunan Acara Berhasil Disimpan ke Memori!");
-    }
-
-    function loadShowPreset() {
-      alert("Preset Acara Berhasil Dimuat!");
-    }
-
-    initMatrixGrid();
-  </script>
-</body>
-</html>
+  // Inisialisasi awal
+  initMatrixGrid();
+</script>
