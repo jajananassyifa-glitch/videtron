@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Grand El Hajj Studio - Fixed Engine</title>
+  <title>Grand El Hajj Studio - Offline Standalone Engine</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
     body {
@@ -158,6 +158,7 @@
 
     function renderLayer(layerIdx) {
       const container = document.getElementById(`layer${layerIdx}-clips`);
+      if (!container) return;
       container.innerHTML = '';
 
       for (let s = 0; s < slotCounts[layerIdx]; s++) {
@@ -239,7 +240,6 @@
 
       if (!item) return;
 
-      // Unselect jika mengeklik slot yang sedang aktif
       if (activeMediaKeys[layerIdx] === key) {
         activeMediaKeys[layerIdx] = null;
         screen.innerHTML = `<span style="color:#475569;">LAYAR ${layerIdx === 0 ? 'KIRI' : layerIdx === 1 ? 'TENGAH' : 'KANAN'}</span>`;
@@ -258,7 +258,7 @@
         video.muted = true;
         video.playsInline = true;
         screen.appendChild(video);
-        video.play().catch(err => console.log('Autoplay error:', err));
+        video.play().catch(err => console.log('Autoplay:', err));
       } else {
         const img = document.createElement('img');
         img.src = item.url;
