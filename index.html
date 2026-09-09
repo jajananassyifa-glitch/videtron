@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Grand El Hajj Studio - Ultimate Broadcasting Engine</title>
+  <title>Grand El Hajj Studio Engine</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
     body {
@@ -12,765 +12,368 @@
       display: flex; flex-direction: column; overflow: hidden; font-size: 11px;
     }
 
-    /* SPLASH SCREEN */
-    #splashScreen {
-      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      background: #090a0f; z-index: 9999; display: flex; flex-direction: column;
-      align-items: center; justify-content: center; gap: 20px;
-    }
-    .splash-logo { max-width: 280px; max-height: 180px; object-fit: contain; }
-    .btn-enter-app {
-      background: #10b981; color: #000; font-weight: bold; border: none;
-      padding: 12px 32px; border-radius: 6px; font-size: 14px; cursor: pointer;
-      box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); transition: all 0.2s;
-    }
-    .btn-enter-app:hover { transform: scale(1.05); background: #34d399; }
-
-    /* HEADER */
     header {
       height: 42px; background: #161920; border-bottom: 1px solid #262b36;
       display: flex; align-items: center; justify-content: space-between; padding: 0 12px;
     }
-    .brand { font-weight: 800; font-size: 13px; color: #10b981; letter-spacing: 1.5px; display: flex; align-items: center; gap: 8px; }
-    .top-controls { display: flex; gap: 8px; align-items: center; }
-    .btn-action { background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-weight: 600; padding: 6px 12px; border-radius: 4px; cursor: pointer; transition: all 0.2s; }
+    .brand { font-weight: 800; font-size: 13px; color: #10b981; letter-spacing: 1.5px; }
+    .btn-action { background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-weight: 600; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
     .btn-action:hover { background: #334155; color: #fff; }
-    .btn-hidden-settings { background: transparent; border: none; color: #475569; font-size: 14px; cursor: pointer; margin-left: 5px; }
-    .btn-hidden-settings:hover { color: #10b981; }
 
-    /* WORKSPACE */
     .workspace { display: flex; flex-direction: column; flex: 1; height: calc(100vh - 42px); }
 
-    /* TOP SECTION: CANVAS PREVIEW & CONTROLS */
-    .top-section { display: flex; height: 50%; background: #0b0c10; border-bottom: 1px solid #262b36; }
-    
+    /* CANVAS & TOP PANEL */
+    .top-section { display: flex; height: 55%; background: #0b0c10; border-bottom: 1px solid #262b36; }
     .canvas-box { flex: 1; background: #000; display: flex; flex-direction: column; position: relative; }
     .canvas-header { background: #161920; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #262b36; }
     .canvas-container { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; background: #000; }
     canvas { max-width: 100%; max-height: 100%; object-fit: contain; background: #050505; }
 
-    /* FULLSCREEN CANVAS CONTAINER */
-    .canvas-container:fullscreen {
-      width: 100vw; height: 100vh; background: #000; display: flex; align-items: center; justify-content: center;
-    }
-    .canvas-container:fullscreen canvas {
-      width: 100vw; height: 100vh; max-width: none; max-height: none;
-    }
+    /* FULLSCREEN CANVAS */
+    .canvas-container:fullscreen { width: 100vw; height: 100vh; background: #000; }
+    .canvas-container:fullscreen canvas { width: 100vw; height: 100vh; max-width: none; max-height: none; }
 
-    /* RUNNING TEXT OVERLAY */
-    .ticker-container {
-      position: absolute; bottom: 0; width: 100%; background: rgba(15, 17, 21, 0.85);
-      color: #f3f4f6; font-size: 15px; font-weight: 600; overflow: hidden; white-space: nowrap; display: none; border-top: 2px solid #10b981;
-    }
-    .ticker-text { display: inline-block; padding-left: 100%; animation: marquee 15s linear infinite; }
-    @keyframes marquee { 0% { transform: translate(0, 0); } 100% { transform: translate(-100%, 0); } }
-
-    /* SCENE SWITCHER BAR */
-    .scene-bar { background: #111318; border-bottom: 1px solid #262b36; padding: 6px 12px; display: flex; gap: 8px; align-items: center; }
-    .btn-scene { background: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 5px 12px; font-weight: 700; border-radius: 3px; cursor: pointer; }
-    .btn-scene.active { background: #10b981; color: #000; border-color: #10b981; }
-
-    /* CONTROL PANEL SIDEBAR */
-    .control-panel { width: 310px; background: #161920; border-left: 1px solid #262b36; padding: 10px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
-    .section-title { font-weight: 700; color: #10b981; border-bottom: 1px solid #262b36; padding-bottom: 4px; letter-spacing: 0.5px; font-size: 11px; margin-top: 4px; }
-
+    /* SIDE PANEL CONTROLLER */
+    .control-panel { width: 320px; background: #161920; border-left: 1px solid #262b36; padding: 10px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
+    .section-title { font-weight: 700; color: #10b981; border-bottom: 1px solid #262b36; padding-bottom: 4px; font-size: 11px; margin-top: 4px; }
     .scale-group { display: flex; flex-direction: column; gap: 4px; background: #111318; padding: 6px; border-radius: 4px; border: 1px solid #262b36; }
     .scale-row { display: flex; align-items: center; gap: 6px; }
-    .scale-row label { width: 70px; font-size: 10px; color: #94a3b8; }
+    .scale-row label { width: 75px; font-size: 10px; color: #94a3b8; }
     .scale-row input[type=range] { flex: 1; }
 
-    /* BACKGROUND COLOR PICKER UI */
-    .color-picker-group { display: flex; gap: 6px; align-items: center; background: #111318; padding: 6px; border-radius: 4px; border: 1px solid #262b36; }
-    .btn-color-preset { width: 22px; height: 22px; border-radius: 50%; border: 1px solid #475569; cursor: pointer; }
-
-    /* MATRIX GRID (BOTTOM SECTION) */
+    /* BOTTOM MATRIX GRID */
     .matrix-section { display: flex; flex: 1; background: #0f1115; overflow: hidden; }
     .layers-stack { flex: 1; display: flex; flex-direction: column; padding: 8px; gap: 8px; overflow-y: auto; }
-
     .layer-row { display: flex; height: 95px; background: #161920; border: 1px solid #262b36; border-radius: 4px; }
-    .layer-head { width: 160px; background: #1a1e26; padding: 8px; border-right: 1px solid #262b36; display: flex; flex-direction: column; justify-content: space-between; }
-    .btn-add-slot { background: #10b981; color: #000; font-weight: bold; border: none; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 9px; margin-top: 4px; }
-    .btn-add-slot:hover { background: #34d399; }
-    
+    .layer-head { width: 140px; background: #1a1e26; padding: 8px; border-right: 1px solid #262b36; display: flex; flex-direction: column; justify-content: space-between; }
     .clips-container { flex: 1; display: flex; gap: 8px; padding: 8px; overflow-x: auto; align-items: center; }
-    
-    /* SLOT MATRIX */
+
+    /* SLOT MATRIX UI */
     .clip-slot {
-      min-width: 105px; width: 105px; height: 100%; background: #1a1e26; border: 1px dashed #334155; border-radius: 4px;
+      min-width: 110px; width: 110px; height: 100%; background: #1a1e26; border: 1px dashed #334155; border-radius: 4px;
       cursor: pointer; position: relative; overflow: hidden; display: flex; flex-direction: column;
-      align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0;
+      align-items: center; justify-content: center; flex-shrink: 0;
     }
     .clip-slot:hover { border-color: #10b981; background: #222733; }
-    .clip-slot.active { border: 2px solid #10b981; box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
+    .clip-slot.active { border: 2px solid #10b981; box-shadow: 0 0 8px rgba(16, 185, 129, 0.4); }
     .clip-slot.active::after {
       content: 'LIVE'; position: absolute; top: 2px; right: 2px; background: #ef4444; color: #fff;
-      font-size: 7px; font-weight: bold; padding: 1px 3px; border-radius: 2px; z-index: 6;
+      font-size: 7px; font-weight: bold; padding: 1px 3px; border-radius: 2px; z-index: 10;
     }
-    .clip-thumb { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; pointer-events: none; z-index: 1; }
     
+    .slot-preview { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; pointer-events: none; }
+    .slot-overlay-info { position: absolute; top: 4px; left: 4px; background: rgba(0,0,0,0.6); color: #fff; padding: 1px 4px; font-size: 8px; border-radius: 2px; pointer-events: none; }
+
     .clip-controls {
-      position: absolute; bottom: 0; width: 100%; background: rgba(15, 17, 21, 0.9);
+      position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(15, 17, 21, 0.95);
       display: flex; justify-content: space-between; padding: 3px; z-index: 5;
     }
-    .btn-ctrl { background: #334155; color: #fff; border: none; padding: 2px 4px; font-size: 8px; border-radius: 2px; cursor: pointer; }
-    .btn-ctrl.active { background: #10b981; color: #000; font-weight: bold; }
+    .btn-ctrl { background: #334155; color: #fff; border: none; padding: 3px 6px; font-size: 9px; border-radius: 2px; cursor: pointer; }
+    .btn-ctrl:hover { background: #475569; }
     .btn-ctrl.danger { background: #ef4444; color: #fff; }
-
-    /* MODAL */
-    .modal-overlay {
-      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      background: rgba(0,0,0,0.85); z-index: 10000; display: none;
-      align-items: center; justify-content: center;
-    }
-    .modal-box {
-      background: #161920; border: 1px solid #262b36; width: 340px; padding: 20px;
-      border-radius: 6px; display: flex; flex-direction: column; gap: 12px;
-    }
-
-    /* AUDIO VU METER */
-    .vu-meter-bar { width: 100%; height: 6px; background: #1e293b; border-radius: 3px; overflow: hidden; margin-top: 4px; }
-    .vu-meter-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #10b981, #f59e0b); transition: width 0.1s; }
+    .btn-ctrl.danger:hover { background: #dc2626; }
   </style>
 </head>
 <body>
 
-  <!-- SPLASH SCREEN -->
-  <div id="splashScreen">
-    <img id="appLogoImg" src="https://via.placeholder.com/300x150/161920/10b981?text=GRAND+EL+HAJJ" class="splash-logo" alt="Logo Grand El Hajj">
-    <h2 style="color: #10b981; letter-spacing: 2px;">GRAND EL HAJJ STUDIO</h2>
-    <button class="btn-enter-app" onclick="openStudioApp()">MASUK KE STUDIO ENGINE</button>
-  </div>
-
-  <!-- HEADER -->
   <header>
-    <div class="brand">
-      <span>GRAND EL HAJJ // STUDIO ENGINE</span>
-      <button class="btn-hidden-settings" onclick="promptProtectedSettings()" title="Pengaturan Tersembunyi">⚙️</button>
-    </div>
-    <div class="top-controls">
-      <button class="btn-action" onclick="saveShowPreset()">💾 SIMPAN ACARA</button>
-      <button class="btn-action" onclick="loadShowPreset()">📂 BUKA ACARA</button>
+    <div class="brand">GRAND EL HAJJ // BROADCAST ENGINE</div>
+    <div>
+      <button class="btn-action" onclick="toggleFullScreen()">🖥️ FULLSCREEN (1 LAYAR)</button>
     </div>
   </header>
 
-  <!-- SCENE SWITCHER BAR -->
-  <div class="scene-bar">
-    <span style="font-weight:700; color:#10b981; margin-right:8px;">SCENE PRESET:</span>
-    <button class="btn-scene active" id="btnScene1" onclick="switchScene(1)">SCENE 1</button>
-    <button class="btn-scene" id="btnScene2" onclick="switchScene(2)">SCENE 2</button>
-    <button class="btn-scene" id="btnScene3" onclick="switchScene(3)">SCENE 3</button>
-    <button class="btn-scene" id="btnScene4" onclick="switchScene(4)">SCENE 4</button>
-    
-    <div style="margin-left: auto; font-family: monospace; font-size: 13px; color: #38bdf8; font-weight: bold;" id="studioClock">00:00:00 WIB</div>
-  </div>
-
   <div class="workspace">
-
-    <!-- TOP SECTION: CANVAS PREVIEW & CONTROLS -->
     <div class="top-section">
+      <!-- CANVAS DISPLAY -->
       <div class="canvas-box">
         <div class="canvas-header">
-          <span style="font-weight:700; color:#38bdf8;" id="currentSceneTitle">PROGRAM OUTPUT - SCENE 1</span>
-          <div>
-            <button class="btn-action" style="padding: 2px 8px; font-size: 10px;" onclick="toggleFullScreen()">🖥️ FULLSCREEN (1 LAYAR)</button>
-            <span style="color:#94a3b8; font-size:10px; margin-left: 8px;">CANVAS 1280x720 60FPS</span>
-          </div>
+          <span style="font-weight:700; color:#38bdf8;">PROGRAM OUTPUT PREVIEW</span>
+          <span style="color:#94a3b8; font-size:10px;">CANVAS 1280x720</span>
         </div>
-        
         <div class="canvas-container" id="canvasContainer">
           <canvas id="masterCanvas" width="1280" height="720"></canvas>
-          <div class="ticker-container" id="tickerBox">
-            <div class="ticker-text" id="tickerContent"></div>
-          </div>
         </div>
       </div>
 
-      <!-- PANEL CONTROLLER ADVANCED -->
+      <!-- KONTROL UKURAN & POSISI TIAP LAYAR -->
       <div class="control-panel">
-        
-        <!-- PILIHAN WARNA BACKGROUND CANVAS -->
-        <div class="section-title">🎨 WARNA BACKGROUND CANVAS</div>
-        <div class="color-picker-group">
-          <label style="font-size:10px; color:#94a3b8;">Preset:</label>
-          <button class="btn-color-preset" style="background:#050505;" title="Hitam" onclick="setCanvasBg('#050505')"></button>
-          <button class="btn-color-preset" style="background:#ffffff;" title="Putih" onclick="setCanvasBg('#ffffff')"></button>
-          <button class="btn-color-preset" style="background:#0f172a;" title="Biru Gelap" onclick="setCanvasBg('#0f172a')"></button>
-          <button class="btn-color-preset" style="background:#334155;" title="Abu-abu" onclick="setCanvasBg('#334155')"></button>
-          
-          <label style="font-size:10px; color:#94a3b8; margin-left: auto;">Kustom:</label>
-          <input type="color" id="canvasBgPicker" value="#050505" style="border:none; width:26px; height:22px; background:none; cursor:pointer;" onchange="setCanvasBg(this.value)">
-        </div>
+        <div class="section-title">📐 KONTROL 3 LAYAR INDEPENDEN</div>
 
-        <div class="section-title">📐 UKURAN & POSISI INDEPENDEN LAYAR</div>
-        
         <!-- LAYAR KANAN -->
         <div class="scale-group">
-          <span style="color:#38bdf8; font-weight:bold;">Layar Kanan</span>
-          <div class="scale-row"><label>Lebar (%):</label><input type="range" id="scaleRightW" min="10" max="200" value="100" oninput="updateScales()"></div>
-          <div class="scale-row"><label>Tinggi (%):</label><input type="range" id="scaleRightH" min="10" max="200" value="100" oninput="updateScales()"></div>
-          <div class="scale-row"><label>Posisi X:</label><input type="range" id="posXRight" min="-200" max="200" value="0" oninput="updateScales()"></div>
+          <span style="color:#38bdf8; font-weight:bold;">1. Layar Kanan</span>
+          <div class="scale-row"><label>Lebar (%):</label><input type="range" id="w2" min="10" max="200" value="100" oninput="updateLayout()"></div>
+          <div class="scale-row"><label>Tinggi (%):</label><input type="range" id="h2" min="10" max="200" value="100" oninput="updateLayout()"></div>
+          <div class="scale-row"><label>Posisi X:</label><input type="range" id="x2" min="-300" max="300" value="0" oninput="updateLayout()"></div>
         </div>
 
         <!-- LAYAR TENGAH -->
         <div class="scale-group">
-          <span style="color:#10b981; font-weight:bold;">Layar Tengah</span>
-          <div class="scale-row"><label>Lebar (%):</label><input type="range" id="scaleCenterW" min="10" max="200" value="100" oninput="updateScales()"></div>
-          <div class="scale-row"><label>Tinggi (%):</label><input type="range" id="scaleCenterH" min="10" max="200" value="100" oninput="updateScales()"></div>
-          <div class="scale-row"><label>Posisi X:</label><input type="range" id="posXCenter" min="-200" max="200" value="0" oninput="updateScales()"></div>
+          <span style="color:#10b981; font-weight:bold;">2. Layar Tengah</span>
+          <div class="scale-row"><label>Lebar (%):</label><input type="range" id="w1" min="10" max="200" value="100" oninput="updateLayout()"></div>
+          <div class="scale-row"><label>Tinggi (%):</label><input type="range" id="h1" min="10" max="200" value="100" oninput="updateLayout()"></div>
+          <div class="scale-row"><label>Posisi X:</label><input type="range" id="x1" min="-300" max="300" value="0" oninput="updateLayout()"></div>
         </div>
 
         <!-- LAYAR KIRI -->
         <div class="scale-group">
-          <span style="color:#f59e0b; font-weight:bold;">Layar Kiri</span>
-          <div class="scale-row"><label>Lebar (%):</label><input type="range" id="scaleLeftW" min="10" max="200" value="100" oninput="updateScales()"></div>
-          <div class="scale-row"><label>Tinggi (%):</label><input type="range" id="scaleLeftH" min="10" max="200" value="100" oninput="updateScales()"></div>
-          <div class="scale-row"><label>Posisi X:</label><input type="range" id="posXLeft" min="-200" max="200" value="0" oninput="updateScales()"></div>
+          <span style="color:#f59e0b; font-weight:bold;">3. Layar Kiri</span>
+          <div class="scale-row"><label>Lebar (%):</label><input type="range" id="w0" min="10" max="200" value="100" oninput="updateLayout()"></div>
+          <div class="scale-row"><label>Tinggi (%):</label><input type="range" id="h0" min="10" max="200" value="100" oninput="updateLayout()"></div>
+          <div class="scale-row"><label>Posisi X:</label><input type="range" id="x0" min="-300" max="300" value="0" oninput="updateLayout()"></div>
         </div>
-
-        <div class="section-title">🔊 AUDIO CONTROL & VU METER</div>
-        <div>
-          <label>Master Volume:</label>
-          <input type="range" min="0" max="1" step="0.01" value="1" style="width:100%;" oninput="setMasterVolume(this.value)">
-          <div class="vu-meter-bar"><div class="vu-meter-fill" id="vuFill"></div></div>
-        </div>
-
-        <div class="section-title">📢 RUNNING TEXT CONTROL</div>
-        <textarea id="txtMarquee" placeholder="Ketik teks running text..." style="width:100%; height:35px; background:#0f1115; color:#fff; border:1px solid #334155; font-size:10px; border-radius:3px;"></textarea>
-        <button class="btn-action" style="width:100%; margin-top:3px;" onclick="toggleRunningText()">TAMPILKAN / SEMBUNYIKAN TEXT</button>
       </div>
     </div>
 
-    <!-- BOTTOM SECTION: MATRIX LAYER GRID -->
+    <!-- BOTTOM MATRIX GRID -->
     <div class="matrix-section">
       <div class="layers-stack">
-        
-        <!-- LAYER KANAN -->
+        <!-- ROW LAYAR KANAN -->
         <div class="layer-row">
           <div class="layer-head">
             <span style="color:#38bdf8; font-weight:700;">LAYAR KANAN</span>
-            <button class="btn-add-slot" onclick="addNewSlot(2)">+ Slot Baru</button>
+            <span style="color:#64748b; font-size:9px;">Layer Index: 2</span>
           </div>
           <div class="clips-container" id="layer2-clips"></div>
         </div>
 
-        <!-- LAYER TENGAH -->
+        <!-- ROW LAYAR TENGAH -->
         <div class="layer-row">
           <div class="layer-head">
             <span style="color:#10b981; font-weight:700;">LAYAR TENGAH</span>
-            <button class="btn-add-slot" onclick="addNewSlot(1)">+ Slot Baru</button>
+            <span style="color:#64748b; font-size:9px;">Layer Index: 1</span>
           </div>
           <div class="clips-container" id="layer1-clips"></div>
         </div>
 
-        <!-- LAYER KIRI -->
+        <!-- ROW LAYAR KIRI -->
         <div class="layer-row">
           <div class="layer-head">
             <span style="color:#f59e0b; font-weight:700;">LAYAR KIRI</span>
-            <button class="btn-add-slot" onclick="addNewSlot(0)">+ Slot Baru</button>
+            <span style="color:#64748b; font-size:9px;">Layer Index: 0</span>
           </div>
           <div class="clips-container" id="layer0-clips"></div>
         </div>
-
-      </div>
-    </div>
-
-  </div>
-
-  <!-- MODAL PENGATURAN LOGO & PASSWORD -->
-  <div class="modal-overlay" id="settingsModal">
-    <div class="modal-box">
-      <h3 style="color:#10b981; border-bottom:1px solid #334155; padding-bottom:4px;">⚙️ PENGATURAN TERSEMBUNYI</h3>
-      
-      <div>
-        <label>Ganti Logo Aplikasi (URL/File):</label>
-        <input type="file" id="logoFileInput" accept="image/*" style="margin-top:4px; font-size:10px;" onchange="updateLogoFromFile(event)">
-      </div>
-
-      <div>
-        <label>Ganti Password Tersembunyi:</label>
-        <input type="password" id="newPasswordInput" placeholder="Masukkan password baru..." style="width:100%; background:#0f1115; border:1px solid #334155; color:#fff; padding:6px; border-radius:3px; margin-top:4px;">
-      </div>
-
-      <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:10px;">
-        <button class="btn-action" onclick="closeSettingsModal()">BATAL</button>
-        <button class="btn-action" style="background:#10b981; color:#000;" onclick="saveHiddenSettings()">SIMPAN PENGATURAN</button>
       </div>
     </div>
   </div>
 
-  <!-- HIDDEN FILE INPUT -->
-  <input type="file" id="directSlotInput" accept="video/*,image/*" style="display:none;" onchange="handleDirectSlotUpload(event)">
+  <!-- HIDDEN INPUT UNTUK UPLOAD -->
+  <input type="file" id="fileUploader" accept="video/*,image/*" style="display:none;" onchange="onFileSelected(event)">
 
   <script>
     const canvas = document.getElementById('masterCanvas');
     const ctx = canvas.getContext('2d');
 
-    let hiddenPassword = localStorage.getItem('elhajj_password') || '1234';
-    let appLogoUrl = localStorage.getItem('elhajj_logo') || 'https://via.placeholder.com/300x150/161920/10b981?text=GRAND+EL+HAJJ';
-    let canvasBgColor = '#050505';
-    
-    let currentScene = 1;
-    
-    const createDefaultTransform = () => ({
-      scaleW: [100, 100, 100],
-      scaleH: [100, 100, 100],
-      posX: [0, 0, 0]
-    });
+    // Data Layar & Slot
+    const activeMedia = [null, null, null]; // [Layar Kiri (0), Layar Tengah (1), Layar Kanan (2)]
+    const slotData = {}; // Menyimpan data slot per Key
+    let targetUploadKey = null;
 
-    const scenePresets = {
-      1: { activeMedia: [null, null, null], ...createDefaultTransform() },
-      2: { activeMedia: [null, null, null], ...createDefaultTransform() },
-      3: { activeMedia: [null, null, null], ...createDefaultTransform() },
-      4: { activeMedia: [null, null, null], ...createDefaultTransform() }
+    // Layout Transform
+    const layout = {
+      w: [100, 100, 100],
+      h: [100, 100, 100],
+      x: [0, 0, 0]
     };
 
-    const slotData = {};
-    const slotCounts = [6, 6, 6];
-    let targetSlotKeyForUpload = null;
-
-    document.getElementById('appLogoImg').src = appLogoUrl;
-
-    function openStudioApp() {
-      document.getElementById('splashScreen').style.display = 'none';
+    // Inisialisasi Slot (Masing-masing 6 Slot)
+    function initSlots() {
+      for (let layer = 0; layer < 3; layer++) {
+        const container = document.getElementById(`layer${layer}-clips`);
+        container.innerHTML = '';
+        for (let slot = 0; slot < 6; slot++) {
+          const key = `${layer}-${slot}`;
+          const slotEl = document.createElement('div');
+          slotEl.className = 'clip-slot';
+          slotEl.id = `slot-${key}`;
+          slotEl.onclick = () => onSlotClick(layer, slot);
+          slotEl.innerHTML = `<span style="font-size:22px; color:#475569;">+</span>`;
+          container.appendChild(slotEl);
+        }
+      }
     }
 
-    setInterval(() => {
-      const now = new Date();
-      document.getElementById('studioClock').innerText = now.toLocaleTimeString('id-ID') + ' WIB';
-    }, 1000);
-
-    function setCanvasBg(color) {
-      canvasBgColor = color;
-      document.getElementById('canvasBgPicker').value = color;
+    // Klik pada Slot: Pilih/Upload
+    function onSlotClick(layer, slot) {
+      const key = `${layer}-${slot}`;
+      if (!slotData[key]) {
+        targetUploadKey = key;
+        const uploader = document.getElementById('fileUploader');
+        uploader.value = '';
+        uploader.click();
+      } else {
+        // Saklar Play ke Canvas
+        const item = slotData[key];
+        if (activeMedia[layer] === item.media) {
+          if (item.isVideo) item.media.pause();
+          activeMedia[layer] = null;
+        } else {
+          activeMedia[layer] = item.media;
+          if (item.isVideo) item.media.play().catch(() => {});
+        }
+        updateActiveUI();
+      }
     }
 
-    // ENGINE RENDERING CANVAS
-    function renderEngine() {
-      ctx.fillStyle = canvasBgColor;
+    // Proses Pilihan File
+    function onFileSelected(e) {
+      const file = e.target.files[0];
+      if (!file || !targetUploadKey) return;
+
+      const key = targetUploadKey;
+      const fileUrl = URL.createObjectURL(file);
+      const isVideo = file.type.startsWith('video/');
+
+      if (isVideo) {
+        const video = document.createElement('video');
+        video.src = fileUrl;
+        video.loop = true;
+        video.muted = true;
+        video.playsInline = true;
+
+        video.onloadedmetadata = () => {
+          slotData[key] = { media: video, isVideo: true, url: fileUrl };
+          renderSlotUI(key);
+        };
+      } else {
+        const img = new Image();
+        img.src = fileUrl;
+        img.onload = () => {
+          slotData[key] = { media: img, isVideo: false, url: fileUrl };
+          renderSlotUI(key);
+        };
+      }
+    }
+
+    // Update Tampilan UI Slot
+    function renderSlotUI(key) {
+      const slotEl = document.getElementById(`slot-${key}`);
+      const item = slotData[key];
+      if (!slotEl || !item) return;
+
+      let elementTag = item.isVideo 
+        ? `<video src="${item.url}" class="slot-preview" muted loop autoplay></video>`
+        : `<img src="${item.url}" class="slot-preview" />`;
+
+      let controls = `
+        <div class="slot-overlay-info">${item.isVideo ? 'VIDEO' : 'GAMBAR'}</div>
+        <div class="clip-controls" onclick="event.stopPropagation();">
+          ${item.isVideo ? `<button class="btn-ctrl" onclick="togglePause('${key}', this)">⏸/▶</button>` : '<span></span>'}
+          <button class="btn-ctrl danger" onclick="deleteSlot('${key}')">🗑️ Hapus</button>
+        </div>
+      `;
+
+      slotEl.innerHTML = elementTag + controls;
+      updateActiveUI();
+    }
+
+    // Fungsi Pause / Play Video pada Slot
+    function togglePause(key, btn) {
+      const item = slotData[key];
+      if (item && item.isVideo) {
+        if (item.media.paused) {
+          item.media.play();
+        } else {
+          item.media.pause();
+        }
+      }
+    }
+
+    // Fungsi Hapus File dari Slot
+    function deleteSlot(key) {
+      const item = slotData[key];
+      if (!item) return;
+
+      const layer = parseInt(key.split('-')[0]);
+
+      if (item.isVideo) {
+        item.media.pause();
+        item.media.src = '';
+      }
+
+      if (activeMedia[layer] === item.media) {
+        activeMedia[layer] = null;
+      }
+
+      URL.revokeObjectURL(item.url);
+      delete slotData[key];
+
+      const slotEl = document.getElementById(`slot-${key}`);
+      slotEl.className = 'clip-slot';
+      slotEl.innerHTML = `<span style="font-size:22px; color:#475569;">+</span>`;
+      
+      updateActiveUI();
+    }
+
+    // Update Status LIVE pada UI Slot
+    function updateActiveUI() {
+      for (let layer = 0; layer < 3; layer++) {
+        for (let slot = 0; slot < 6; slot++) {
+          const key = `${layer}-${slot}`;
+          const slotEl = document.getElementById(`slot-${key}`);
+          if (!slotEl) continue;
+
+          if (slotData[key] && slotData[key].media === activeMedia[layer]) {
+            slotEl.classList.add('active');
+          } else {
+            slotEl.classList.remove('active');
+          }
+        }
+      }
+    }
+
+    // Update Layout dari Slider
+    function updateLayout() {
+      for (let i = 0; i < 3; i++) {
+        layout.w[i] = parseFloat(document.getElementById(`w${i}`).value);
+        layout.h[i] = parseFloat(document.getElementById(`h${i}`).value);
+        layout.x[i] = parseFloat(document.getElementById(`x${i}`).value);
+      }
+    }
+
+    // Fullscreen Mode (1 Layar Utuh)
+    function toggleFullScreen() {
+      const container = document.getElementById('canvasContainer');
+      if (!document.fullscreenElement) {
+        container.requestFullscreen();
+      } else {
+        document.exitFullscreen();
+      }
+    }
+
+    // MAIN RENDER LOOP (ENGINE CANVAS 60FPS)
+    function draw() {
+      ctx.fillStyle = "#050505";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      const activeMedia = scenePresets[currentScene].activeMedia;
-      const { scaleW, scaleH, posX } = scenePresets[currentScene];
       const sectionWidth = canvas.width / 3;
 
       for (let i = 0; i < 3; i++) {
         const media = activeMedia[i];
         if (media) {
           ctx.save();
-          
-          const targetW = sectionWidth * (scaleW[i] / 100);
-          const targetH = canvas.height * (scaleH[i] / 100);
+          const targetW = sectionWidth * (layout.w[i] / 100);
+          const targetH = canvas.height * (layout.h[i] / 100);
 
           const defaultX = (i * sectionWidth) + (sectionWidth - targetW) / 2;
-          const xPos = defaultX + posX[i];
-          const yPos = (canvas.height - targetH) / 2;
+          const posX = defaultX + layout.x[i];
+          const posY = (canvas.height - targetH) / 2;
 
           try {
-            ctx.drawImage(media, xPos, yPos, targetW, targetH);
-          } catch (e) {
-            // Abaikan error jika video belum siap dirender pada frame pertama
-          }
+            ctx.drawImage(media, posX, posY, targetW, targetH);
+          } catch (err) {}
           ctx.restore();
         }
       }
 
-      updateVUMeter();
-      requestAnimationFrame(renderEngine);
-    }
-    renderEngine();
-
-    function initMatrixGrid() {
-      for (let layerIdx = 0; layerIdx < 3; layerIdx++) {
-        renderLayerSlots(layerIdx);
-      }
+      requestAnimationFrame(draw);
     }
 
-    function renderLayerSlots(layerIdx) {
-      const container = document.getElementById(`layer${layerIdx}-clips`);
-      if (!container) return;
-      container.innerHTML = '';
-      
-      for (let slotIdx = 0; slotIdx < slotCounts[layerIdx]; slotIdx++) {
-        const slotKey = `${layerIdx}-${slotIdx}`;
-        const slot = document.createElement('div');
-        slot.className = 'clip-slot';
-        slot.id = `slot-${slotKey}`;
-        
-        if (slotData[slotKey]) {
-          const item = slotData[slotKey];
-          renderSlotWithControls(slotKey, item.thumbUrl, item.media.tagName === 'VIDEO', item.media);
-        } else {
-          slot.innerHTML = `<span style="font-size:20px; color:#475569;">+</span>`;
-          slot.onclick = () => triggerDirectUpload(slotKey);
-        }
-
-        container.appendChild(slot);
-      }
-    }
-
-    function addNewSlot(layerIdx) {
-      slotCounts[layerIdx]++;
-      renderLayerSlots(layerIdx);
-      updateMatrixActiveUI();
-    }
-
-    function triggerDirectUpload(slotKey) {
-      targetSlotKeyForUpload = slotKey;
-      const input = document.getElementById('directSlotInput');
-      input.value = ''; // Reset input agar file yang sama bisa diunggah ulang
-      input.click();
-    }
-
-    // HANDLER UPLOAD FILE CEPAT & AMAN
-    async function handleDirectSlotUpload(event) {
-      const file = event.target.files[0];
-      if (!file || !targetSlotKeyForUpload) return;
-
-      const currentSlotKey = targetSlotKeyForUpload;
-      const [layerIdx] = currentSlotKey.split('-').map(Number);
-      const slotEl = document.getElementById(`slot-${currentSlotKey}`);
-      
-      if (slotEl) slotEl.innerHTML = `<span style="color:#10b981; font-size:10px;">Memuat...</span>`;
-
-      // Hapus media lama jika slot sedang diisi ulang
-      if (slotData[currentSlotKey]) {
-        deleteSlotMedia(currentSlotKey, false);
-      }
-
-      const fileUrl = URL.createObjectURL(file);
-
-      if (file.type.startsWith('video/')) {
-        const videoEl = document.createElement('video');
-        videoEl.src = fileUrl;
-        videoEl.loop = true;
-        videoEl.muted = true;
-        videoEl.playsInline = true;
-        videoEl.crossOrigin = "anonymous";
-
-        videoEl.onloadeddata = async () => {
-          let thumbUrl = '';
-          try {
-            thumbUrl = await generateVideoThumbnail(videoEl);
-          } catch (err) {
-            thumbUrl = fileUrl; // Fallback jika browser memblokir thumbnail capture
-          }
-
-          slotData[currentSlotKey] = { media: videoEl, thumbUrl: thumbUrl || fileUrl, objectUrl: fileUrl };
-          renderLayerSlots(layerIdx);
-          updateMatrixActiveUI();
-        };
-
-        videoEl.onerror = () => {
-          alert("Format video tidak didukung oleh browser ini!");
-          renderLayerSlots(layerIdx);
-        };
-      } else if (file.type.startsWith('image/')) {
-        const imgEl = new Image();
-        imgEl.src = fileUrl;
-        imgEl.onload = () => {
-          slotData[currentSlotKey] = { media: imgEl, thumbUrl: fileUrl, objectUrl: fileUrl };
-          renderLayerSlots(layerIdx);
-          updateMatrixActiveUI();
-        };
-        imgEl.onerror = () => {
-          alert("Gagal memuat file gambar!");
-          renderLayerSlots(layerIdx);
-        };
-      } else {
-        alert("File tidak didukung! Pilih file gambar atau video.");
-        renderLayerSlots(layerIdx);
-      }
-
-      targetSlotKeyForUpload = null;
-    }
-
-    function renderSlotWithControls(slotKey, imgUrl, isVideo, media) {
-      const slotEl = document.getElementById(`slot-${slotKey}`);
-      if (!slotEl) return;
-
-      let mediaPreviewHTML = '';
-      if (imgUrl) {
-        mediaPreviewHTML = `<img src="${imgUrl}" class="clip-thumb" />`;
-      } else {
-        mediaPreviewHTML = `<div style="background:#1e293b; width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#10b981; font-weight:bold; font-size:10px;">${isVideo ? 'VIDEO' : 'GAMBAR'}</div>`;
-      }
-
-      let controlsHTML = '';
-      if (isVideo) {
-        controlsHTML = `
-          <div class="clip-controls" onclick="event.stopPropagation();">
-            <button class="btn-ctrl" onclick="togglePlayPause('${slotKey}', this)">${media.paused ? '▶ Play' : '⏸ Pause'}</button>
-            <button class="btn-ctrl ${media.loop ? 'active' : ''}" onclick="toggleLoop('${slotKey}', this)">🔁 Loop</button>
-            <button class="btn-ctrl danger" onclick="deleteSlotMedia('${slotKey}')">🗑️</button>
-          </div>
-        `;
-      } else {
-        controlsHTML = `
-          <div class="clip-controls" onclick="event.stopPropagation();">
-            <span style="font-size:8px; color:#aaa;">Gambar</span>
-            <button class="btn-ctrl danger" onclick="deleteSlotMedia('${slotKey}')">🗑️</button>
-          </div>
-        `;
-      }
-
-      slotEl.innerHTML = mediaPreviewHTML + controlsHTML;
-
-      slotEl.onclick = () => {
-        const layerIdx = parseInt(slotKey.split('-')[0]);
-        const slotIdx = parseInt(slotKey.split('-')[1]);
-        triggerSlot(layerIdx, slotIdx);
-      };
-    }
-
-    function togglePlayPause(slotKey, btn) {
-      const item = slotData[slotKey];
-      if (item && item.media.tagName === 'VIDEO') {
-        if (item.media.paused) {
-          item.media.play();
-          btn.innerText = "⏸ Pause";
-        } else {
-          item.media.pause();
-          btn.innerText = "▶ Play";
-        }
-      }
-    }
-
-    function toggleLoop(slotKey, btn) {
-      const item = slotData[slotKey];
-      if (item && item.media.tagName === 'VIDEO') {
-        item.media.loop = !item.media.loop;
-        btn.classList.toggle('active', item.media.loop);
-      }
-    }
-
-    // PENANGANAN HAPUS SLOT & BERSIHKAN MEMORI
-    function deleteSlotMedia(slotKey, reRender = true) {
-      const item = slotData[slotKey];
-      if (!item) return;
-
-      const layerIdx = parseInt(slotKey.split('-')[0]);
-
-      if (item.media.tagName === 'VIDEO') {
-        item.media.pause();
-        item.media.currentTime = 0;
-        item.media.src = '';
-        item.media.load();
-      }
-
-      // Lepas media dari preset scene yang sedang aktif
-      Object.keys(scenePresets).forEach(sKey => {
-        if (scenePresets[sKey].activeMedia[layerIdx] === item.media) {
-          scenePresets[sKey].activeMedia[layerIdx] = null;
-        }
-      });
-
-      // Bebaskan memori browser
-      if (item.objectUrl) {
-        URL.revokeObjectURL(item.objectUrl);
-      }
-
-      delete slotData[slotKey];
-
-      if (reRender) {
-        renderLayerSlots(layerIdx);
-        updateMatrixActiveUI();
-      }
-    }
-
-    // PEMBUATAN THUMBNAIL DENGAN TIMEOUT AGAR TIDAK HANGING
-    function generateVideoThumbnail(videoEl) {
-      return new Promise((resolve) => {
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = 160; 
-        tempCanvas.height = 90;
-        const tempCtx = tempCanvas.getContext('2d');
-        
-        const capture = () => {
-          try {
-            tempCtx.drawImage(videoEl, 0, 0, tempCanvas.width, tempCanvas.height);
-            resolve(tempCanvas.toDataURL('image/jpeg'));
-          } catch (e) {
-            resolve('');
-          }
-        };
-
-        if (videoEl.readyState >= 2) {
-          capture();
-        } else {
-          videoEl.onloadeddata = capture;
-          setTimeout(() => resolve(''), 1000); // Fallback timeout 1 detik
-        }
-      });
-    }
-
-    function toggleFullScreen() {
-      const container = document.getElementById('canvasContainer');
-      if (!document.fullscreenElement) {
-        container.requestFullscreen().catch(err => {
-          alert(`Gagal masuk Fullscreen: ${err.message}`);
-        });
-      } else {
-        document.exitFullscreen();
-      }
-    }
-
-    function promptProtectedSettings() {
-      const inputPass = prompt("Masukkan Password Tersembunyi Dashboard:");
-      if (inputPass === hiddenPassword) {
-        document.getElementById('settingsModal').style.display = 'flex';
-      } else if (inputPass !== null) {
-        alert("Password Salah! Akses Ditolak.");
-      }
-    }
-
-    function closeSettingsModal() {
-      document.getElementById('settingsModal').style.display = 'none';
-    }
-
-    function updateLogoFromFile(event) {
-      const file = event.target.files[0];
-      if (file) {
-        const logoUrl = URL.createObjectURL(file);
-        appLogoUrl = logoUrl;
-        document.getElementById('appLogoImg').src = logoUrl;
-        localStorage.setItem('elhajj_logo', logoUrl);
-      }
-    }
-
-    function saveHiddenSettings() {
-      const newPass = document.getElementById('newPasswordInput').value.trim();
-      if (newPass !== '') {
-        hiddenPassword = newPass;
-        localStorage.setItem('elhajj_password', newPass);
-        alert("Password Baru Berhasil Disimpan!");
-      }
-      closeSettingsModal();
-    }
-
-    function switchScene(sceneNumber) {
-      currentScene = sceneNumber;
-      for (let i = 1; i <= 4; i++) {
-        const btn = document.getElementById(`btnScene${i}`);
-        if (btn) btn.classList.toggle('active', i === sceneNumber);
-      }
-      document.getElementById('currentSceneTitle').innerText = `PROGRAM OUTPUT - SCENE ${sceneNumber}`;
-
-      const { scaleW, scaleH, posX } = scenePresets[currentScene];
-      
-      document.getElementById('scaleLeftW').value = scaleW[0];
-      document.getElementById('scaleLeftH').value = scaleH[0];
-      document.getElementById('posXLeft').value = posX[0];
-
-      document.getElementById('scaleCenterW').value = scaleW[1];
-      document.getElementById('scaleCenterH').value = scaleH[1];
-      document.getElementById('posXCenter').value = posX[1];
-
-      document.getElementById('scaleRightW').value = scaleW[2];
-      document.getElementById('scaleRightH').value = scaleH[2];
-      document.getElementById('posXRight').value = posX[2];
-
-      updateMatrixActiveUI();
-    }
-
-    function updateScales() {
-      const sp = scenePresets[currentScene];
-
-      sp.scaleW[0] = parseFloat(document.getElementById('scaleLeftW').value);
-      sp.scaleH[0] = parseFloat(document.getElementById('scaleLeftH').value);
-      sp.posX[0] = parseFloat(document.getElementById('posXLeft').value);
-
-      sp.scaleW[1] = parseFloat(document.getElementById('scaleCenterW').value);
-      sp.scaleH[1] = parseFloat(document.getElementById('scaleCenterH').value);
-      sp.posX[1] = parseFloat(document.getElementById('posXCenter').value);
-
-      sp.scaleW[2] = parseFloat(document.getElementById('scaleRightW').value);
-      sp.scaleH[2] = parseFloat(document.getElementById('scaleRightH').value);
-      sp.posX[2] = parseFloat(document.getElementById('posXRight').value);
-    }
-
-    function triggerSlot(layerIdx, slotIdx) {
-      const slotKey = `${layerIdx}-${slotIdx}`;
-      const item = slotData[slotKey];
-      const currentActive = scenePresets[currentScene].activeMedia;
-
-      if (!item) return;
-
-      if (currentActive[layerIdx] === item.media) {
-        if (item.media.tagName === 'VIDEO') item.media.pause();
-        currentActive[layerIdx] = null;
-      } else {
-        currentActive[layerIdx] = item.media;
-        if (item.media.tagName === 'VIDEO') {
-          item.media.play().catch(e => console.log("Autoplay dicegah browser:", e));
-        }
-      }
-
-      updateMatrixActiveUI();
-    }
-
-    function updateMatrixActiveUI() {
-      const currentActive = scenePresets[currentScene].activeMedia;
-      for (let l = 0; l < 3; l++) {
-        const container = document.getElementById(`layer${l}-clips`);
-        if (!container) continue;
-        
-        Array.from(container.children).forEach(c => c.classList.remove('active'));
-        
-        Object.keys(slotData).forEach(slotKey => {
-          if (slotData[slotKey].media === currentActive[l]) {
-            document.getElementById(`slot-${slotKey}`)?.classList.add('active');
-          }
-        });
-      }
-    }
-
-    function toggleRunningText() {
-      const txt = document.getElementById('txtMarquee').value;
-      const box = document.getElementById('tickerBox');
-      const content = document.getElementById('tickerContent');
-
-      if (box.style.display === 'block') {
-        box.style.display = 'none';
-      } else if (txt.trim() !== '') {
-        content.innerText = txt;
-        box.style.display = 'block';
-      }
-    }
-
-    function setMasterVolume(val) {
-      Object.values(slotData).forEach(item => {
-        if (item.media.tagName === 'VIDEO') item.media.volume = val;
-      });
-    }
-
-    function updateVUMeter() {
-      const hasActiveVideo = scenePresets[currentScene].activeMedia.some(m => m && m.tagName === 'VIDEO' && !m.paused);
-      const vuFill = document.getElementById('vuFill');
-      if (vuFill) {
-        if (hasActiveVideo) {
-          vuFill.style.width = Math.floor(Math.random() * 60 + 30) + '%';
-        } else {
-          vuFill.style.width = '0%';
-        }
-      }
-    }
-
-    function saveShowPreset() {
-      localStorage.setItem('grand_elhajj_preset_pro', JSON.stringify(scenePresets));
-      alert("Susunan Acara Berhasil Disimpan!");
-    }
-
-    function loadShowPreset() {
-      const data = localStorage.getItem('grand_elhajj_preset_pro');
-      if (data) {
-        alert("Preset Scene Berhasil Dimuat!");
-      } else {
-        alert("Belum ada preset tersimpan.");
-      }
-    }
-
-    // Inisialisasi awal grid slot
-    initMatrixGrid();
+    // Jalan Awal
+    initSlots();
+    draw();
   </script>
 </body>
 </html>
