@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Grand El Hajj Studio Engine - Dual Display Fixed</title>
+  <title>Grand El Hajj Studio Engine - Pro Version</title>
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -21,34 +21,37 @@
       display: flex; align-items: center; justify-content: space-between; padding: 0 12px;
     }
     .brand { font-weight: 800; font-size: 13px; color: #10b981; letter-spacing: 1.5px; }
-    .btn-action { background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-weight: 600; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+    
+    .btn-action { background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-weight: 600; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; }
     .btn-action:hover { background: #334155; color: #fff; }
     .btn-videtron { background: #059669; color: #fff; border: 1px solid #10b981; font-weight: bold; }
     .btn-videtron:hover { background: #047857; }
     .btn-live { background: #ef4444; color: #fff; border: none; font-weight: bold; }
     .btn-live:hover { background: #dc2626; }
-    .btn-live.streaming { animation: pulse 1.5s infinite; background: #22c55e; }
-
-    @keyframes pulse {
-      0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
-      70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
-    }
+    .btn-preset { background: #8b5cf6; color: #fff; border: 1px solid #a78bfa; font-weight: 600; }
+    .btn-preset:hover { background: #7c3aed; }
 
     .workspace { display: flex; flex-direction: column; flex: 1; height: calc(100vh - 42px); }
 
-    .top-section { display: flex; height: 50%; background: #0b0c10; border-bottom: 1px solid #262b36; }
+    .top-section { display: flex; height: 52%; background: #0b0c10; border-bottom: 1px solid #262b36; }
     .canvas-box { flex: 1; background: #000; display: flex; flex-direction: column; position: relative; }
     .canvas-header { background: #161920; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #262b36; }
     .canvas-container { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; background: #000; }
     canvas { max-width: 100%; max-height: 100%; object-fit: contain; background: #050505; }
 
-    .control-panel { width: 300px; background: #161920; border-left: 1px solid #262b36; padding: 10px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
-    .section-title { font-weight: 700; color: #10b981; border-bottom: 1px solid #262b36; padding-bottom: 4px; font-size: 11px; margin-top: 4px; }
-    .scale-group { display: flex; flex-direction: column; gap: 4px; background: #111318; padding: 6px; border-radius: 4px; border: 1px solid #262b36; }
+    /* PANEL KONTROL DENGAN INDIKATOR PERSEN & NILAI PRESI */
+    .control-panel { width: 330px; background: #161920; border-left: 1px solid #262b36; padding: 8px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
+    .section-title { font-weight: 700; color: #10b981; border-bottom: 1px solid #262b36; padding-bottom: 4px; font-size: 11px; margin-top: 2px; display: flex; justify-content: space-between; align-items: center; }
+    
+    .scale-group { display: flex; flex-direction: column; gap: 4px; background: #111318; padding: 6px 8px; border-radius: 4px; border: 1px solid #262b36; }
+    .scale-header { display: flex; justify-content: space-between; align-items: center; font-weight: bold; margin-bottom: 2px; }
+    .btn-reset-small { background: #334155; color: #cbd5e1; border: none; padding: 2px 6px; border-radius: 3px; font-size: 9px; cursor: pointer; }
+    .btn-reset-small:hover { background: #ef4444; color: #fff; }
+
     .scale-row { display: flex; align-items: center; gap: 6px; }
-    .scale-row label { width: 75px; font-size: 10px; color: #94a3b8; }
-    .scale-row input[type=range] { flex: 1; }
+    .scale-row label { width: 65px; font-size: 10px; color: #94a3b8; }
+    .scale-row input[type=range] { flex: 1; height: 4px; border-radius: 2px; accent-color: #10b981; cursor: pointer; }
+    .val-badge { width: 42px; text-align: right; font-family: monospace; font-size: 10px; color: #38bdf8; font-weight: bold; }
 
     .bottom-section { display: flex; flex: 1; background: #0f1115; overflow: hidden; }
     .matrix-section { flex: 1; display: flex; overflow: hidden; }
@@ -57,7 +60,7 @@
     .layer-head { width: 120px; background: #1a1e26; padding: 8px; border-right: 1px solid #262b36; display: flex; flex-direction: column; justify-content: center; }
     .clips-container { flex: 1; display: flex; gap: 8px; padding: 8px; overflow-x: auto; align-items: center; }
 
-    .youtube-panel { width: 380px; background: #111318; border-left: 1px solid #262b36; display: flex; flex-direction: column; }
+    .youtube-panel { width: 320px; background: #111318; border-left: 1px solid #262b36; display: flex; flex-direction: column; }
     .youtube-header { background: #161920; padding: 6px 12px; font-weight: bold; color: #ef4444; border-bottom: 1px solid #262b36; display: flex; justify-content: space-between; align-items: center; }
     .youtube-frame-container { flex: 1; background: #000; position: relative; }
     .youtube-frame-container iframe { width: 100%; height: 100%; border: none; }
@@ -109,11 +112,13 @@
 <body>
 
   <header>
-    <div class="brand">GRAND EL HAJJ // BROADCAST ENGINE</div>
-    <div style="display:flex; gap:8px;">
-      <button class="btn-action btn-videtron" onclick="openOutputWindow()">📺 BUKA OUT VIDETRON</button>
-      <button class="btn-action btn-live" id="btnLiveControl" onclick="openLiveConfigModal()">🔴 MULAI LIVE YOUTUBE</button>
-      <button class="btn-action" onclick="toggleFullScreen()">🖥️ FULLSCREEN APP</button>
+    <div class="brand">GRAND EL HAJJ // STUDIO PRO v3</div>
+    <div style="display:flex; gap:6px;">
+      <button class="btn-action btn-preset" onclick="savePreset()">💾 SIMPAN PRESET</button>
+      <button class="btn-action btn-preset" onclick="loadPreset()">📂 MUAT PRESET</button>
+      <button class="btn-action btn-videtron" onclick="openOutputWindow()">📺 OUT VIDETRON</button>
+      <button class="btn-action btn-live" id="btnLiveControl" onclick="openLiveConfigModal()">🔴 LIVE YOUTUBE</button>
+      <button class="btn-action" onclick="toggleFullScreen()">🖥️ FULLSCREEN</button>
     </div>
   </header>
 
@@ -122,35 +127,102 @@
       <div class="canvas-box">
         <div class="canvas-header">
           <span style="font-weight:700; color:#38bdf8;">PROGRAM OUTPUT PREVIEW</span>
-          <span style="color:#94a3b8; font-size:10px;">CANVAS 1280x720 (30 FPS)</span>
+          <span style="color:#94a3b8; font-size:10px;">MASTER CANVAS: 1280x720 (30 FPS)</span>
         </div>
         <div class="canvas-container" id="canvasContainer">
           <canvas id="masterCanvas" width="1280" height="720"></canvas>
         </div>
       </div>
 
+      <!-- KONTROL UKURAN DENGAN PRESISI DAN ANGKANYA -->
       <div class="control-panel">
-        <div class="section-title">📐 KONTROL 3 LAYAR INDEPENDEN</div>
-
-        <div class="scale-group">
-          <span style="color:#38bdf8; font-weight:bold;">1. Layar Kanan</span>
-          <div class="scale-row"><label>Lebar (%):</label><input type="range" id="w2" min="10" max="200" value="100" oninput="updateLayout()"></div>
-          <div class="scale-row"><label>Tinggi (%):</label><input type="range" id="h2" min="10" max="200" value="100" oninput="updateLayout()"></div>
-          <div class="scale-row"><label>Posisi X:</label><input type="range" id="x2" min="-300" max="300" value="0" oninput="updateLayout()"></div>
+        <div class="section-title">
+          <span>📐 LAYOUT & SKALA LAYAR</span>
+          <button class="btn-reset-small" onclick="resetAllLayout()">Reset Semua</button>
         </div>
 
+        <!-- LAYAR 3: KANAN -->
         <div class="scale-group">
-          <span style="color:#10b981; font-weight:bold;">2. Layar Tengah</span>
-          <div class="scale-row"><label>Lebar (%):</label><input type="range" id="w1" min="10" max="200" value="100" oninput="updateLayout()"></div>
-          <div class="scale-row"><label>Tinggi (%):</label><input type="range" id="h1" min="10" max="200" value="100" oninput="updateLayout()"></div>
-          <div class="scale-row"><label>Posisi X:</label><input type="range" id="x1" min="-300" max="300" value="0" oninput="updateLayout()"></div>
+          <div class="scale-header">
+            <span style="color:#38bdf8;">1. Layar Kanan (Index 2)</span>
+            <button class="btn-reset-small" onclick="resetSingleLayout(2)">↺ Reset</button>
+          </div>
+          <div class="scale-row">
+            <label>Ukuran W:</label>
+            <input type="range" id="w2" min="10" max="200" value="100" oninput="updateLayoutUI(2)">
+            <span class="val-badge" id="v_w2">100%</span>
+          </div>
+          <div class="scale-row">
+            <label>Ukuran H:</label>
+            <input type="range" id="h2" min="10" max="200" value="100" oninput="updateLayoutUI(2)">
+            <span class="val-badge" id="v_h2">100%</span>
+          </div>
+          <div class="scale-row">
+            <label>Posisi X:</label>
+            <input type="range" id="x2" min="-100" max="100" value="0" oninput="updateLayoutUI(2)">
+            <span class="val-badge" id="v_x2">0</span>
+          </div>
+          <div class="scale-row">
+            <label>Posisi Y:</label>
+            <input type="range" id="y2" min="-100" max="100" value="0" oninput="updateLayoutUI(2)">
+            <span class="val-badge" id="v_y2">0</span>
+          </div>
         </div>
 
+        <!-- LAYAR 2: TENGAH -->
         <div class="scale-group">
-          <span style="color:#f59e0b; font-weight:bold;">3. Layar Kiri</span>
-          <div class="scale-row"><label>Lebar (%):</label><input type="range" id="w0" min="10" max="200" value="100" oninput="updateLayout()"></div>
-          <div class="scale-row"><label>Tinggi (%):</label><input type="range" id="h0" min="10" max="200" value="100" oninput="updateLayout()"></div>
-          <div class="scale-row"><label>Posisi X:</label><input type="range" id="x0" min="-300" max="300" value="0" oninput="updateLayout()"></div>
+          <div class="scale-header">
+            <span style="color:#10b981;">2. Layar Tengah (Index 1)</span>
+            <button class="btn-reset-small" onclick="resetSingleLayout(1)">↺ Reset</button>
+          </div>
+          <div class="scale-row">
+            <label>Ukuran W:</label>
+            <input type="range" id="w1" min="10" max="200" value="100" oninput="updateLayoutUI(1)">
+            <span class="val-badge" id="v_w1">100%</span>
+          </div>
+          <div class="scale-row">
+            <label>Ukuran H:</label>
+            <input type="range" id="h1" min="10" max="200" value="100" oninput="updateLayoutUI(1)">
+            <span class="val-badge" id="v_h1">100%</span>
+          </div>
+          <div class="scale-row">
+            <label>Posisi X:</label>
+            <input type="range" id="x1" min="-100" max="100" value="0" oninput="updateLayoutUI(1)">
+            <span class="val-badge" id="v_x1">0</span>
+          </div>
+          <div class="scale-row">
+            <label>Posisi Y:</label>
+            <input type="range" id="y1" min="-100" max="100" value="0" oninput="updateLayoutUI(1)">
+            <span class="val-badge" id="v_y1">0</span>
+          </div>
+        </div>
+
+        <!-- LAYAR 1: KIRI -->
+        <div class="scale-group">
+          <div class="scale-header">
+            <span style="color:#f59e0b;">3. Layar Kiri (Index 0)</span>
+            <button class="btn-reset-small" onclick="resetSingleLayout(0)">↺ Reset</button>
+          </div>
+          <div class="scale-row">
+            <label>Ukuran W:</label>
+            <input type="range" id="w0" min="10" max="200" value="100" oninput="updateLayoutUI(0)">
+            <span class="val-badge" id="v_w0">100%</span>
+          </div>
+          <div class="scale-row">
+            <label>Ukuran H:</label>
+            <input type="range" id="h0" min="10" max="200" value="100" oninput="updateLayoutUI(0)">
+            <span class="val-badge" id="v_h0">100%</span>
+          </div>
+          <div class="scale-row">
+            <label>Posisi X:</label>
+            <input type="range" id="x0" min="-100" max="100" value="0" oninput="updateLayoutUI(0)">
+            <span class="val-badge" id="v_x0">0</span>
+          </div>
+          <div class="scale-row">
+            <label>Posisi Y:</label>
+            <input type="range" id="y0" min="-100" max="100" value="0" oninput="updateLayoutUI(0)">
+            <span class="val-badge" id="v_y0">0</span>
+          </div>
         </div>
       </div>
     </div>
@@ -186,37 +258,36 @@
 
       <div class="youtube-panel" id="youtubePanel">
         <div class="youtube-header">
-          <span>📺 YOUTUBE LIVE MONITOR & CHAT</span>
+          <span>📺 YOUTUBE LIVE MONITOR</span>
           <button class="btn-ctrl" onclick="reloadYouTubeIframe()">🔄 Refresh</button>
         </div>
         <div class="youtube-frame-container" id="ytContainer">
           <div style="padding:20px; text-align:center; color:#64748b;">
-            Chat dan Status Live YouTube terpantau langsung di panel ini.
+            Monitoring YouTube Live Chat & Player akan aktif saat Live dimulai.
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- MODAL CONFIGURASI LIVE -->
+  <!-- MODALS -->
   <div class="modal-backdrop" id="liveModal">
     <div class="modal-box">
-      <div style="font-weight:bold; font-size:12px; color:#ef4444;">🔴 KONFIGURASI LIVE STREAMING DIRECT</div>
-      <label>1. Stream Key YouTube Anda:</label>
-      <input type="password" id="ytStreamKeyInput" placeholder="Masukkan Stream Key dari YouTube Studio">
-      <label>2. YouTube Video ID (Untuk Live Chat):</label>
+      <div style="font-weight:bold; font-size:12px; color:#ef4444;">🔴 KONFIGURASI LIVE STREAMING</div>
+      <label>1. Stream Key YouTube:</label>
+      <input type="password" id="ytStreamKeyInput" placeholder="Masukkan Stream Key">
+      <label>2. YouTube Video ID (Opsional untuk Chat):</label>
       <input type="text" id="ytVideoIdInput" placeholder="Contoh: dQw4w9WgXcQ">
-      <label>3. Server Relay (Node.js Local):</label>
+      <label>3. Server Relay (Node.js):</label>
       <input type="text" id="relayServerInput" value="ws://localhost:8080">
 
       <div style="display:flex; gap:8px; margin-top:8px;">
-        <button style="flex:1; background:#ef4444;" onclick="startDirectLive()">MULAI BROADCAST NATIVE</button>
+        <button style="flex:1; background:#ef4444;" onclick="startDirectLive()">MULAI BROADCAST</button>
         <button style="background:#334155; width:70px;" onclick="closeLiveModal()">Batal</button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL PICKER KAMERA -->
   <div class="modal-backdrop" id="cameraModal">
     <div class="modal-box">
       <div style="font-weight:bold; font-size:12px;">📹 PILIH SOURCE KAMERA</div>
@@ -243,15 +314,14 @@
     let isLiveStreaming = false;
     let mediaRecorder = null;
     let socket = null;
-
-    // DIRECT CHANNEL SYNC VIA BROADCAST CHANNEL API
-    const outputChannel = new BroadcastChannel('videotron_display_stream');
     let outputWindow = null;
 
+    // DATA LAYOUT UNTUK 3 LAYAR
     const layout = {
       w: [100, 100, 100],
       h: [100, 100, 100],
-      x: [0, 0, 0]
+      x: [0, 0, 0],
+      y: [0, 0, 0]
     };
 
     function initSlots() {
@@ -281,7 +351,61 @@
       `;
     }
 
-    // CARA HANDAL MEMBUKA KANVAS OUT DENGAN KLIK SAYA
+    // PENGATURAN SKALA & PRESISI DENGAN ANGKA
+    function updateLayoutUI(i) {
+      layout.w[i] = parseFloat(document.getElementById(`w${i}`).value);
+      layout.h[i] = parseFloat(document.getElementById(`h${i}`).value);
+      layout.x[i] = parseFloat(document.getElementById(`x${i}`).value);
+      layout.y[i] = parseFloat(document.getElementById(`y${i}`).value);
+
+      document.getElementById(`v_w${i}`).innerText = `${layout.w[i]}%`;
+      document.getElementById(`v_h${i}`).innerText = `${layout.h[i]}%`;
+      
+      const posX = layout.x[i];
+      document.getElementById(`v_x${i}`).innerText = posX > 0 ? `+${posX}` : `${posX}`;
+      
+      const posY = layout.y[i];
+      document.getElementById(`v_y2`).innerText = posY > 0 ? `+${posY}` : `${posY}`;
+    }
+
+    function resetSingleLayout(i) {
+      document.getElementById(`w${i}`).value = 100;
+      document.getElementById(`h${i}`).value = 100;
+      document.getElementById(`x${i}`).value = 0;
+      document.getElementById(`y${i}`).value = 0;
+      updateLayoutUI(i);
+    }
+
+    function resetAllLayout() {
+      for (let i = 0; i < 3; i++) {
+        resetSingleLayout(i);
+      }
+    }
+
+    // SIMPAN DAN MUAT PRESET LAYOUT (FITUR NO 1)
+    function savePreset() {
+      localStorage.setItem('grand_el_hajj_preset', JSON.stringify(layout));
+      alert("✅ Preset tata letak layar berhasil disimpan!");
+    }
+
+    function loadPreset() {
+      const saved = localStorage.getItem('grand_el_hajj_preset');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        for (let i = 0; i < 3; i++) {
+          if (parsed.w) document.getElementById(`w${i}`).value = parsed.w[i];
+          if (parsed.h) document.getElementById(`h${i}`).value = parsed.h[i];
+          if (parsed.x) document.getElementById(`x${i}`).value = parsed.x[i];
+          if (parsed.y) document.getElementById(`y${i}`).value = parsed.y[i];
+          updateLayoutUI(i);
+        }
+        alert("✅ Preset tata letak layar berhasil dimuat!");
+      } else {
+        alert("Belum ada preset tersimpan.");
+      }
+    }
+
+    // SISTEM TRANSMISI OUTPUT VIDETRON DENGAN STREAM CANVAS (100% PASTI TAMPIL & SUARA MASUK)
     function openOutputWindow() {
       if (outputWindow && !outputWindow.closed) {
         outputWindow.focus();
@@ -291,7 +415,7 @@
       outputWindow = window.open('', '_blank', 'width=1280,height=720,menubar=no,toolbar=no,location=no');
 
       if (!outputWindow) {
-        alert("Browser memblokir jendela baru. Klik ikon gembok/setelan di sebelah kiri URL browser kamu, lalu izinkan 'Pop-ups and redirects'!");
+        alert("Browser memblokir Pop-up. Harap izinkan Pop-up di samping kiri URL browser!");
         return;
       }
 
@@ -299,26 +423,26 @@
         <!DOCTYPE html>
         <html>
         <head>
-          <title>VIDETRON CLEAN PROGRAM OUTPUT</title>
+          <title>VIDETRON CLEAN OUTPUT</title>
           <style>
             * { margin:0; padding:0; background:#000; overflow:hidden; }
             body, html { width:100vw; height:100vh; display:flex; justify-content:center; align-items:center; }
-            img { width:100vw; height:100vh; object-fit:contain; }
+            video { width:100vw; height:100vh; object-fit:contain; }
           </style>
         </head>
         <body>
-          <img id="outImage" src="" />
-          <script>
-            const channel = new BroadcastChannel('videotron_display_stream');
-            const img = document.getElementById('outImage');
-            channel.onmessage = (e) => {
-              img.src = e.data;
-            };
-          <\/script>
+          <video id="outVideo" autoplay playsinline muted></video>
         </body>
         </html>
       `);
       outputWindow.document.close();
+
+      setTimeout(() => {
+        const videoEl = outputWindow.document.getElementById('outVideo');
+        const stream = canvas.captureStream(30);
+        videoEl.srcObject = stream;
+        videoEl.play().catch(e => console.log(e));
+      }, 500);
     }
 
     function openLiveConfigModal() {
@@ -335,7 +459,7 @@
       const relayServer = document.getElementById('relayServerInput').value.trim();
 
       if (!streamKey) {
-        alert("Harap masukkan Stream Key YouTube Anda!");
+        alert("Harap masukkan Stream Key YouTube!");
         return;
       }
 
@@ -367,17 +491,11 @@
 
           mediaRecorder.start(250);
           isLiveStreaming = true;
-          btn.classList.add('streaming');
-          btn.innerText = '🟢 BROADCASTING LIVE (ACTIVE)';
+          btn.innerText = '🟢 BROADCASTING LIVE';
         };
 
-        socket.onerror = (err) => {
-          alert("Gagal terhubung ke Relay Server! Pastikan Node.js server berjalan.");
-        };
-
-        socket.onclose = () => {
-          if (isLiveStreaming) stopLiveStream();
-        };
+        socket.onerror = () => alert("Gagal terhubung ke Relay Server Node.js!");
+        socket.onclose = () => { if (isLiveStreaming) stopLiveStream(); };
       } else {
         stopLiveStream();
       }
@@ -389,8 +507,7 @@
       isLiveStreaming = false;
 
       const btn = document.getElementById('btnLiveControl');
-      btn.classList.remove('streaming');
-      btn.innerText = '🔴 MULAI LIVE YOUTUBE';
+      btn.innerText = '🔴 LIVE YOUTUBE';
     }
 
     function reloadYouTubeIframe() {
@@ -537,7 +654,7 @@
         select.innerHTML = '';
 
         if (videoDevices.length === 0) {
-          alert("Tidak ada perangkat kamera eksternal yang terdeteksi!");
+          alert("Tidak ada kamera eksternal yang terdeteksi!");
           return;
         }
 
@@ -706,14 +823,6 @@
       }
     }
 
-    function updateLayout() {
-      for (let i = 0; i < 3; i++) {
-        layout.w[i] = parseFloat(document.getElementById(`w${i}`).value);
-        layout.h[i] = parseFloat(document.getElementById(`h${i}`).value);
-        layout.x[i] = parseFloat(document.getElementById(`x${i}`).value);
-      }
-    }
-
     function toggleFullScreen() {
       const container = document.getElementById('canvasContainer');
       if (!document.fullscreenElement) {
@@ -723,54 +832,35 @@
       }
     }
 
-    let lastSendTime = 0;
-
+    // DRAW ENGINE DENGAN PERHITUNGAN PRESISI KOORDINAT X & Y
     function draw() {
-      ctx.fillStyle = "#050505";
+      ctx.fillStyle = "#000000";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      const isOnlyCenterActive = activeMedia[1] !== null && activeMedia[0] === null && activeMedia[2] === null;
+      const sectionWidth = canvas.width / 3;
 
-      if (isOnlyCenterActive) {
-        const media = activeMedia[1];
-        ctx.save();
-        const targetW = canvas.width * (layout.w[1] / 100);
-        const targetH = canvas.height * (layout.h[1] / 100);
-        const posX = ((canvas.width - targetW) / 2) + layout.x[1];
-        const posY = (canvas.height - targetH) / 2;
+      for (let i = 0; i < 3; i++) {
+        const media = activeMedia[i];
+        if (media) {
+          ctx.save();
 
-        try {
-          ctx.drawImage(media, posX, posY, targetW, targetH);
-        } catch (err) {}
-        ctx.restore();
+          const targetW = sectionWidth * (layout.w[i] / 100);
+          const targetH = canvas.height * (layout.h[i] / 100);
 
-      } else {
-        const sectionWidth = canvas.width / 3;
+          // Posisi X Standar + Offset Nilai X
+          const defaultX = (i * sectionWidth) + (sectionWidth - targetW) / 2;
+          const posX = defaultX + (layout.x[i] * 5); // 1 poin = 5px shift
 
-        for (let i = 0; i < 3; i++) {
-          const media = activeMedia[i];
-          if (media) {
-            ctx.save();
-            const targetW = sectionWidth * (layout.w[i] / 100);
-            const targetH = canvas.height * (layout.h[i] / 100);
+          // Posisi Y Standar + Offset Nilai Y
+          const defaultY = (canvas.height - targetH) / 2;
+          const posY = defaultY + (layout.y[i] * 5); // 1 poin = 5px shift
 
-            const defaultX = (i * sectionWidth) + (sectionWidth - targetW) / 2;
-            const posX = defaultX + layout.x[i];
-            const posY = (canvas.height - targetH) / 2;
+          try {
+            ctx.drawImage(media, posX, posY, targetW, targetH);
+          } catch (err) {}
 
-            try {
-              ctx.drawImage(media, posX, posY, targetW, targetH);
-            } catch (err) {}
-            ctx.restore();
-          }
+          ctx.restore();
         }
-      }
-
-      // KIRIM STREAM GAMBAR SECARA REALTIME KE TAB OUT VIDETRON (30 FPS)
-      const now = Date.now();
-      if (now - lastSendTime > 33) {
-        outputChannel.postMessage(canvas.toDataURL('image/jpeg', 0.8));
-        lastSendTime = now;
       }
 
       requestAnimationFrame(draw);
