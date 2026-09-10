@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Grand El Hajj Studio Engine - Single Window Multi-Output</title>
+  <title>Grand El Hajj Studio Engine - Dual Display Fixed</title>
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -111,7 +111,7 @@
   <header>
     <div class="brand">GRAND EL HAJJ // BROADCAST ENGINE</div>
     <div style="display:flex; gap:8px;">
-      <button class="btn-action btn-videtron" onclick="projectToVideotronScreen()">📺 SALURKAN KE VIDETRON (EXTEND)</button>
+      <button class="btn-action btn-videtron" onclick="openOutputWindow()">📺 BUKA OUT VIDETRON</button>
       <button class="btn-action btn-live" id="btnLiveControl" onclick="openLiveConfigModal()">🔴 MULAI LIVE YOUTUBE</button>
       <button class="btn-action" onclick="toggleFullScreen()">🖥️ FULLSCREEN APP</button>
     </div>
@@ -244,9 +244,9 @@
     let mediaRecorder = null;
     let socket = null;
 
-    // DIRECT MULTI-DISPLAY PROJECTION
-    let externalScreen = null;
-    let externalCtx = null;
+    // DIRECT CHANNEL SYNC VIA BROADCAST CHANNEL API
+    const outputChannel = new BroadcastChannel('videotron_display_stream');
+    let outputWindow = null;
 
     const layout = {
       w: [100, 100, 100],
@@ -281,65 +281,44 @@
       `;
     }
 
-    // MEMANCARKAN CANVAS KE MONITOR EXTEND VIDETRON SECARA MULTI-SCREEN
-    async function projectToVideotronScreen() {
-      if ('getScreenDetails' in window) {
-        try {
-          const screens = await window.getScreenDetails();
-          const videotronScreen = screens.screens.find(s => s.isExtended) || screens.screens[1];
-
-          if (videotronScreen) {
-            const options = {
-              x: videotronScreen.availLeft,
-              y: videotronScreen.availTop,
-              width: videotronScreen.availWidth,
-              height: videotronScreen.availHeight,
-              fullscreen: true
-            };
-            openProjectionWindow(options);
-            return;
-          }
-        } catch (e) {}
-      }
-
-      // Standar browser fallback (Menempatkan proyeksi otomatis di posisi Layar 2)
-      openProjectionWindow({ x: window.screen.width, y: 0, width: 1280, height: 720 });
-    }
-
-    function openProjectionWindow(pos) {
-      if (externalScreen && !externalScreen.closed) {
-        externalScreen.focus();
+    // CARA HANDAL MEMBUKA KANVAS OUT DENGAN KLIK SAYA
+    function openOutputWindow() {
+      if (outputWindow && !outputWindow.closed) {
+        outputWindow.focus();
         return;
       }
 
-      const features = `left=${pos.x},top=${pos.y},width=${pos.width},height=${pos.height},menubar=no,toolbar=no,location=no,status=no,resizable=yes`;
-      externalScreen = window.open('', 'VideotronOutputEngine', features);
+      outputWindow = window.open('', '_blank', 'width=1280,height=720,menubar=no,toolbar=no,location=no');
 
-      if (!externalScreen) {
-        alert("Browser memblokir pemancaran otomatis. Harap izinkan Pop-up/Redirect di address bar browser kamu!");
+      if (!outputWindow) {
+        alert("Browser memblokir jendela baru. Klik ikon gembok/setelan di sebelah kiri URL browser kamu, lalu izinkan 'Pop-ups and redirects'!");
         return;
       }
 
-      externalScreen.document.write(`
+      outputWindow.document.write(`
         <!DOCTYPE html>
         <html>
         <head>
-          <title>VIDETRON CLEAN CANVAS OUTPUT</title>
+          <title>VIDETRON CLEAN PROGRAM OUTPUT</title>
           <style>
             * { margin:0; padding:0; background:#000; overflow:hidden; }
             body, html { width:100vw; height:100vh; display:flex; justify-content:center; align-items:center; }
-            canvas { width:100vw; height:100vh; object-fit:contain; }
+            img { width:100vw; height:100vh; object-fit:contain; }
           </style>
         </head>
         <body>
-          <canvas id="outCanvas" width="1280" height="720"></canvas>
+          <img id="outImage" src="" />
+          <script>
+            const channel = new BroadcastChannel('videotron_display_stream');
+            const img = document.getElementById('outImage');
+            channel.onmessage = (e) => {
+              img.src = e.data;
+            };
+          <\/script>
         </body>
         </html>
       `);
-
-      externalScreen.document.close();
-      const outCanvas = externalScreen.document.getElementById('outCanvas');
-      externalCtx = outCanvas.getContext('2d');
+      outputWindow.document.close();
     }
 
     function openLiveConfigModal() {
@@ -744,6 +723,8 @@
       }
     }
 
+    let lastSendTime = 0;
+
     function draw() {
       ctx.fillStyle = "#050505";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -785,9 +766,11 @@
         }
       }
 
-      // STREAM SINYAL SECARA OTOMATIS KE LAYAR EXTEND VIDETRON
-      if (externalScreen && !externalScreen.closed && externalCtx) {
-        externalCtx.drawImage(canvas, 0, 0);
+      // KIRIM STREAM GAMBAR SECARA REALTIME KE TAB OUT VIDETRON (30 FPS)
+      const now = Date.now();
+      if (now - lastSendTime > 33) {
+        outputChannel.postMessage(canvas.toDataURL('image/jpeg', 0.8));
+        lastSendTime = now;
       }
 
       requestAnimationFrame(draw);
