@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Grand El Hajj Studio Engine - Full Canvas Mode</title>
+  <title>Grand El Hajj Studio Engine - Fixed Canvas & Video Output</title>
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -37,7 +37,9 @@
     .canvas-box { flex: 1; background: #000; display: flex; flex-direction: column; position: relative; }
     .canvas-header { background: #161920; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #262b36; }
     .canvas-container { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; background: #000; }
-    canvas { max-width: 100%; max-height: 100%; object-fit: contain; background: #050505; }
+    
+    /* Kanvas fleksibel agar selalu mengisi layar secara proporsional */
+    canvas { width: 100%; height: 100%; object-fit: contain; background: #000; }
 
     .control-panel { width: 330px; background: #161920; border-left: 1px solid #262b36; padding: 8px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
     .section-title { font-weight: 700; color: #10b981; border-bottom: 1px solid #262b36; padding-bottom: 4px; font-size: 11px; margin-top: 2px; display: flex; justify-content: space-between; align-items: center; }
@@ -91,9 +93,11 @@
       position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(15, 17, 21, 0.95);
       display: flex; flex-direction: column; gap: 2px; padding: 3px; z-index: 5;
     }
-    .slide-nav-bar { display: flex; justify-content: space-between; align-items: center; background: #0f1115; border-radius: 2px; padding: 1px 2px; }
+    .slide-nav-bar { display: flex; justify-content: space-between; align-items: center; background: #0f1115; border-radius: 2px; padding: 1px 2px; width: 100%; }
     .btn-ctrl { background: #334155; color: #fff; border: none; padding: 2px 5px; font-size: 9px; border-radius: 2px; cursor: pointer; }
+    .btn-ctrl:hover { background: #10b981; }
     .btn-ctrl.danger { background: #ef4444; color: #fff; }
+    .btn-ctrl.danger:hover { background: #dc2626; }
 
     .modal-backdrop {
       position: fixed; top:0; left:0; width:100vw; height:100vh;
@@ -114,7 +118,7 @@
 <body>
 
   <header>
-    <div class="brand">GRAND EL HAJJ // STUDIO PRO v3.1</div>
+    <div class="brand">GRAND EL HAJJ // STUDIO PRO v3.2</div>
     <div style="display:flex; gap:6px;">
       <button class="btn-action btn-preset" onclick="savePreset()">💾 SIMPAN PRESET</button>
       <button class="btn-action btn-preset" onclick="loadPreset()">📂 MUAT PRESET</button>
@@ -129,7 +133,7 @@
       <div class="canvas-box">
         <div class="canvas-header">
           <span style="font-weight:700; color:#38bdf8;">PROGRAM OUTPUT PREVIEW</span>
-          <span style="color:#94a3b8; font-size:10px;">MASTER CANVAS: 1280x720 (30 FPS)</span>
+          <span style="color:#94a3b8; font-size:10px;">MASTER CANVAS: 1280x720 (FULL HD 16:9)</span>
         </div>
         <div class="canvas-container" id="canvasContainer">
           <canvas id="masterCanvas" width="1280" height="720"></canvas>
@@ -333,6 +337,11 @@
       y: [0, 0, 0]
     };
 
+    function init() {
+      initSlots();
+      requestAnimationFrame(renderCanvasLoop);
+    }
+
     function initSlots() {
       for (let layer = 0; layer < 3; layer++) {
         const container = document.getElementById(`layer${layer}-clips`);
@@ -457,7 +466,7 @@
           <style>
             * { margin:0; padding:0; background:#000; overflow:hidden; }
             body, html { width:100vw; height:100vh; display:flex; justify-content:center; align-items:center; }
-            video { width:100vw; height:100vh; object-fit:contain; }
+            video { width:100vw; height:100vh; object-fit:cover; }
           </style>
         </head>
         <body>
@@ -473,6 +482,14 @@
         videoEl.srcObject = stream;
         videoEl.play().catch(e => console.log(e));
       }, 500);
+    }
+
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => alert(err.message));
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+      }
     }
 
     function openLiveConfigModal() {
@@ -570,7 +587,9 @@
         video.src = fileUrl;
         video.loop = true;
         video.playsInline = true;
-        video.onloadedmetadata = () => {
+        video.crossOrigin = 'anonymous';
+
+        video.onloadeddata = () => {
           slotData[key] = { media: video, isVideo: true, isCam: false, url: fileUrl, typeName: 'VIDEO' };
           renderSlotUI(key);
         };
@@ -740,12 +759,49 @@
         if (item.isVideo && !item.isCam) item.media.pause();
         activeMedia[layer] = null;
       } else {
+        // Matikan media aktif sebelumnya di layer yang sama jika berbentuk video
+        const prevMedia = activeMedia[layer];
+        if (prevMedia && prevMedia.tagName === 'VIDEO') {
+          prevMedia.pause();
+        }
+
         activeMedia[layer] = item.media;
+        
+        // PASTI BISA DIMAINKAN & MASUK GAMBAR DENGAN PLAY LOGIC
         if (item.isVideo) {
           item.media.muted = false;
-          item.media.play().catch(() => {});
+          const playPromise = item.media.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(err => {
+              console.warn("Autoplay ditolak browser, mencoba tanpa audio (muted):", err);
+              item.media.muted = true;
+              item.media.play();
+            });
+          }
         }
       }
+      updateActiveUI();
+    }
+
+    function clearSlot(key, event) {
+      if(event) event.stopPropagation();
+      const layer = parseInt(key.split('-')[0]);
+      const item = slotData[key];
+      if (!item) return;
+
+      if (activeMedia[layer] === item.media) {
+        activeMedia[layer] = null;
+      }
+
+      if (item.stream) {
+        item.stream.getTracks().forEach(track => track.stop());
+      } else if (item.isVideo && item.media) {
+        item.media.pause();
+      }
+
+      delete slotData[key];
+      const slotEl = document.getElementById(`slot-${key}`);
+      renderEmptySlot(slotEl, key);
       updateActiveUI();
     }
 
@@ -775,65 +831,28 @@
         slideControls = `
           <div class="slide-nav-bar" onclick="event.stopPropagation();">
             <button class="btn-ctrl" onclick="changeSlide('${key}', -1, event)">◀ Prev</button>
-            <span style="font-size:8px; color:#10b981; font-weight:bold;">Slide ${item.currentSlide + 1}</span>
+            <span style="font-size:8px; color:#10b981; font-weight:bold;">${item.currentSlide + 1}/${item.totalSlides}</span>
             <button class="btn-ctrl" onclick="changeSlide('${key}', 1, event)">Next ▶</button>
           </div>
         `;
       }
 
-      let controls = `
+      slotEl.innerHTML = `
+        ${elementTag}
         <div class="slot-overlay-info">${labelText}</div>
-        <div class="clip-controls" onclick="event.stopPropagation();">
+        <div class="clip-controls">
           ${slideControls}
           <div style="display:flex; justify-content:space-between; width:100%;">
-            ${item.isVideo && !item.isCam ? `<button class="btn-ctrl" onclick="togglePause('${key}', this)">⏸/▶</button>` : '<span></span>'}
-            <button class="btn-ctrl danger" onclick="deleteSlot('${key}')">🗑️ Hapus</button>
+            <button class="btn-ctrl danger" onclick="clearSlot('${key}', event)">🗑️ Hapus</button>
           </div>
         </div>
       `;
 
-      slotEl.innerHTML = elementTag + controls;
-
       if (item.isCam) {
-        document.getElementById(`preview-${key}`).srcObject = item.stream;
+        const prevVid = document.getElementById(`preview-${key}`);
+        if (prevVid) prevVid.srcObject = item.stream;
       }
 
-      updateActiveUI();
-    }
-
-    function togglePause(key, btn) {
-      const item = slotData[key];
-      if (item && item.isVideo && !item.isCam) {
-        if (item.media.paused) item.media.play();
-        else item.media.pause();
-      }
-    }
-
-    function deleteSlot(key) {
-      const item = slotData[key];
-      if (!item) return;
-
-      const layer = parseInt(key.split('-')[0]);
-
-      if (item.isCam && item.stream) {
-        item.stream.getTracks().forEach(track => track.stop());
-      } else if (item.isVideo) {
-        item.media.pause();
-        item.media.src = '';
-        if (item.url) URL.revokeObjectURL(item.url);
-      }
-
-      if (activeMedia[layer] === item.media) {
-        activeMedia[layer] = null;
-      }
-
-      delete slotData[key];
-
-      const slotEl = document.getElementById(`slot-${key}`);
-      slotEl.className = 'clip-slot';
-      slotEl.onclick = null;
-      renderEmptySlot(slotEl, key);
-      
       updateActiveUI();
     }
 
@@ -842,93 +861,88 @@
         for (let slot = 0; slot < 6; slot++) {
           const key = `${layer}-${slot}`;
           const slotEl = document.getElementById(`slot-${key}`);
-          if (!slotEl) continue;
-
-          if (slotData[key] && slotData[key].media === activeMedia[layer]) {
-            slotEl.classList.add('active');
-          } else {
-            slotEl.classList.remove('active');
+          const item = slotData[key];
+          if (slotEl && item) {
+            if (activeMedia[layer] === item.media) {
+              slotEl.classList.add('active');
+            } else {
+              slotEl.classList.remove('active');
+            }
           }
         }
       }
     }
 
-    function toggleFullScreen() {
-      const container = document.getElementById('canvasContainer');
-      if (!document.fullscreenElement) {
-        container.requestFullscreen();
-      } else {
-        document.exitFullscreen();
-      }
-    }
-
-    // UTILITY UNTUK DRAW IMAGE COVER (MEMBUAT GAMBAR FULL TANPA GARIS HITAM)
-    function drawImageCover(ctx, img, x, y, w, h) {
-      const nw = img.naturalWidth || img.videoWidth || w;
-      const nh = img.naturalHeight || img.videoHeight || h;
-      
-      const aspectImg = nw / nh;
-      const aspectTarget = w / h;
-
-      let sx, sy, sw, sh;
-
-      if (aspectImg > aspectTarget) {
-        sh = nh;
-        sw = nh * aspectTarget;
-        sx = (nw - sw) / 2;
-        sy = 0;
-      } else {
-        sw = nw;
-        sh = nw / aspectTarget;
-        sx = 0;
-        sy = (nh - sh) / 2;
-      }
-
-      ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
-    }
-
-    // DRAW ENGINE
-    function draw() {
-      ctx.fillStyle = "#000000";
+    function renderCanvasLoop() {
+      ctx.fillStyle = '#000000';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // JIKA MODE FULL CANVAS AKTIF DAN ADA MEDIA LAYAR TENGAH (INDEX 1)
-      if (isFullCanvasMode && activeMedia[1]) {
-        try {
-          drawImageCover(ctx, activeMedia[1], 0, 0, canvas.width, canvas.height);
-        } catch (err) {}
-      } else {
-        // MODE NORMAL: 3 SEGMEN
-        const sectionWidth = canvas.width / 3;
+      const sectionWidth = canvas.width / 3;
 
+      if (isFullCanvasMode && activeMedia[1]) {
+        drawMediaCover(activeMedia[1], 0, 0, canvas.width, canvas.height);
+      } else {
         for (let i = 0; i < 3; i++) {
           const media = activeMedia[i];
-          if (media) {
-            ctx.save();
+          if (!media) continue;
 
-            const targetW = sectionWidth * (layout.w[i] / 100);
-            const targetH = canvas.height * (layout.h[i] / 100);
+          const baseScaleW = layout.w[i] / 100;
+          const baseScaleH = layout.h[i] / 100;
+          const targetW = sectionWidth * baseScaleW;
+          const targetH = canvas.height * baseScaleH;
 
-            const defaultX = (i * sectionWidth) + (sectionWidth - targetW) / 2;
-            const posX = defaultX + (layout.x[i] * 5);
+          const baseX = i * sectionWidth + (sectionWidth - targetW) / 2;
+          const baseY = (canvas.height - targetH) / 2;
 
-            const defaultY = (canvas.height - targetH) / 2;
-            const posY = defaultY + (layout.y[i] * 5);
+          const finalX = baseX + layout.x[i];
+          const finalY = baseY + layout.y[i];
 
-            try {
-              drawImageCover(ctx, media, posX, posY, targetW, targetH);
-            } catch (err) {}
-
-            ctx.restore();
-          }
+          drawMediaCover(media, finalX, finalY, targetW, targetH);
         }
       }
 
-      requestAnimationFrame(draw);
+      requestAnimationFrame(renderCanvasLoop);
     }
 
-    initSlots();
-    draw();
+    function drawMediaCover(media, x, y, width, height) {
+      // Mendapatkan dimensi aktual media
+      let srcW = media.videoWidth || media.naturalWidth || media.width;
+      let srcH = media.videoHeight || media.naturalHeight || media.height;
+
+      // Jika video belum menyajikan frame (srcW/srcH 0), paksa rendisi penuh tanpa kalkulasi crop
+      if (!srcW || !srcH) {
+        try {
+          ctx.drawImage(media, x, y, width, height);
+        } catch (e) {}
+        return;
+      }
+
+      const srcRatio = srcW / srcH;
+      const destRatio = width / height;
+
+      let drawW, drawH, drawX, drawY;
+
+      if (srcRatio > destRatio) {
+        drawH = srcH;
+        drawW = srcH * destRatio;
+        drawX = (srcW - drawW) / 2;
+        drawY = 0;
+      } else {
+        drawW = srcW;
+        drawH = srcW / destRatio;
+        drawX = 0;
+        drawY = (srcH - drawH) / 2;
+      }
+
+      try {
+        ctx.drawImage(media, drawX, drawY, drawW, drawH, x, y, width, height);
+      } catch (e) {
+        // Fallback jika terjadi pembacaan frame prematur
+        ctx.drawImage(media, x, y, width, height);
+      }
+    }
+
+    window.onload = init;
   </script>
 </body>
 </html>
