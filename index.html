@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Grand El Hajj Studio Engine - Pro Version</title>
+  <title>Grand El Hajj Studio Engine - Full Canvas Mode</title>
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -39,7 +39,6 @@
     .canvas-container { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; background: #000; }
     canvas { max-width: 100%; max-height: 100%; object-fit: contain; background: #050505; }
 
-    /* PANEL KONTROL DENGAN INDIKATOR PERSEN & NILAI PRESI */
     .control-panel { width: 330px; background: #161920; border-left: 1px solid #262b36; padding: 8px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
     .section-title { font-weight: 700; color: #10b981; border-bottom: 1px solid #262b36; padding-bottom: 4px; font-size: 11px; margin-top: 2px; display: flex; justify-content: space-between; align-items: center; }
     
@@ -52,6 +51,9 @@
     .scale-row label { width: 65px; font-size: 10px; color: #94a3b8; }
     .scale-row input[type=range] { flex: 1; height: 4px; border-radius: 2px; accent-color: #10b981; cursor: pointer; }
     .val-badge { width: 42px; text-align: right; font-family: monospace; font-size: 10px; color: #38bdf8; font-weight: bold; }
+
+    .full-mode-box { background: #064e3b; border: 1px solid #10b981; padding: 6px; border-radius: 4px; margin-top: 4px; display: flex; align-items: center; justify-content: space-between; }
+    .full-mode-box label { font-weight: bold; color: #a7f3d0; cursor: pointer; }
 
     .bottom-section { display: flex; flex: 1; background: #0f1115; overflow: hidden; }
     .matrix-section { flex: 1; display: flex; overflow: hidden; }
@@ -112,7 +114,7 @@
 <body>
 
   <header>
-    <div class="brand">GRAND EL HAJJ // STUDIO PRO v3</div>
+    <div class="brand">GRAND EL HAJJ // STUDIO PRO v3.1</div>
     <div style="display:flex; gap:6px;">
       <button class="btn-action btn-preset" onclick="savePreset()">💾 SIMPAN PRESET</button>
       <button class="btn-action btn-preset" onclick="loadPreset()">📂 MUAT PRESET</button>
@@ -134,7 +136,6 @@
         </div>
       </div>
 
-      <!-- KONTROL UKURAN DENGAN PRESISI DAN ANGKANYA -->
       <div class="control-panel">
         <div class="section-title">
           <span>📐 LAYOUT & SKALA LAYAR</span>
@@ -169,31 +170,39 @@
           </div>
         </div>
 
-        <!-- LAYAR 2: TENGAH -->
+        <!-- LAYAR 2: TENGAH DENGAN FITUR FULL CANVAS -->
         <div class="scale-group">
           <div class="scale-header">
             <span style="color:#10b981;">2. Layar Tengah (Index 1)</span>
             <button class="btn-reset-small" onclick="resetSingleLayout(1)">↺ Reset</button>
           </div>
-          <div class="scale-row">
-            <label>Ukuran W:</label>
-            <input type="range" id="w1" min="10" max="200" value="100" oninput="updateLayoutUI(1)">
-            <span class="val-badge" id="v_w1">100%</span>
+
+          <div class="full-mode-box">
+            <label for="chkFullCanvas">🖥️ FULL CANVAS (FULLSCREEN COVER)</label>
+            <input type="checkbox" id="chkFullCanvas" onchange="toggleFullCanvasMode(this.checked)">
           </div>
-          <div class="scale-row">
-            <label>Ukuran H:</label>
-            <input type="range" id="h1" min="10" max="200" value="100" oninput="updateLayoutUI(1)">
-            <span class="val-badge" id="v_h1">100%</span>
-          </div>
-          <div class="scale-row">
-            <label>Posisi X:</label>
-            <input type="range" id="x1" min="-100" max="100" value="0" oninput="updateLayoutUI(1)">
-            <span class="val-badge" id="v_x1">0</span>
-          </div>
-          <div class="scale-row">
-            <label>Posisi Y:</label>
-            <input type="range" id="y1" min="-100" max="100" value="0" oninput="updateLayoutUI(1)">
-            <span class="val-badge" id="v_y1">0</span>
+
+          <div id="controlsLayer1">
+            <div class="scale-row" style="margin-top: 4px;">
+              <label>Ukuran W:</label>
+              <input type="range" id="w1" min="10" max="200" value="100" oninput="updateLayoutUI(1)">
+              <span class="val-badge" id="v_w1">100%</span>
+            </div>
+            <div class="scale-row">
+              <label>Ukuran H:</label>
+              <input type="range" id="h1" min="10" max="200" value="100" oninput="updateLayoutUI(1)">
+              <span class="val-badge" id="v_h1">100%</span>
+            </div>
+            <div class="scale-row">
+              <label>Posisi X:</label>
+              <input type="range" id="x1" min="-100" max="100" value="0" oninput="updateLayoutUI(1)">
+              <span class="val-badge" id="v_x1">0</span>
+            </div>
+            <div class="scale-row">
+              <label>Posisi Y:</label>
+              <input type="range" id="y1" min="-100" max="100" value="0" oninput="updateLayoutUI(1)">
+              <span class="val-badge" id="v_y1">0</span>
+            </div>
           </div>
         </div>
 
@@ -315,8 +324,8 @@
     let mediaRecorder = null;
     let socket = null;
     let outputWindow = null;
+    let isFullCanvasMode = false;
 
-    // DATA LAYOUT UNTUK 3 LAYAR
     const layout = {
       w: [100, 100, 100],
       h: [100, 100, 100],
@@ -351,7 +360,18 @@
       `;
     }
 
-    // PENGATURAN SKALA & PRESISI DENGAN ANGKA
+    function toggleFullCanvasMode(enabled) {
+      isFullCanvasMode = enabled;
+      const ctrl = document.getElementById('controlsLayer1');
+      if (enabled) {
+        ctrl.style.opacity = '0.3';
+        ctrl.style.pointerEvents = 'none';
+      } else {
+        ctrl.style.opacity = '1';
+        ctrl.style.pointerEvents = 'auto';
+      }
+    }
+
     function updateLayoutUI(i) {
       layout.w[i] = parseFloat(document.getElementById(`w${i}`).value);
       layout.h[i] = parseFloat(document.getElementById(`h${i}`).value);
@@ -365,7 +385,7 @@
       document.getElementById(`v_x${i}`).innerText = posX > 0 ? `+${posX}` : `${posX}`;
       
       const posY = layout.y[i];
-      document.getElementById(`v_y2`).innerText = posY > 0 ? `+${posY}` : `${posY}`;
+      document.getElementById(`v_y${i}`).innerText = posY > 0 ? `+${posY}` : `${posY}`;
     }
 
     function resetSingleLayout(i) {
@@ -380,11 +400,16 @@
       for (let i = 0; i < 3; i++) {
         resetSingleLayout(i);
       }
+      document.getElementById('chkFullCanvas').checked = false;
+      toggleFullCanvasMode(false);
     }
 
-    // SIMPAN DAN MUAT PRESET LAYOUT (FITUR NO 1)
     function savePreset() {
-      localStorage.setItem('grand_el_hajj_preset', JSON.stringify(layout));
+      const stateData = {
+        layout: layout,
+        fullCanvas: isFullCanvasMode
+      };
+      localStorage.setItem('grand_el_hajj_preset', JSON.stringify(stateData));
       alert("✅ Preset tata letak layar berhasil disimpan!");
     }
 
@@ -392,12 +417,18 @@
       const saved = localStorage.getItem('grand_el_hajj_preset');
       if (saved) {
         const parsed = JSON.parse(saved);
+        const l = parsed.layout || parsed;
         for (let i = 0; i < 3; i++) {
-          if (parsed.w) document.getElementById(`w${i}`).value = parsed.w[i];
-          if (parsed.h) document.getElementById(`h${i}`).value = parsed.h[i];
-          if (parsed.x) document.getElementById(`x${i}`).value = parsed.x[i];
-          if (parsed.y) document.getElementById(`y${i}`).value = parsed.y[i];
+          if (l.w) document.getElementById(`w${i}`).value = l.w[i];
+          if (l.h) document.getElementById(`h${i}`).value = l.h[i];
+          if (l.x) document.getElementById(`x${i}`).value = l.x[i];
+          if (l.y) document.getElementById(`y${i}`).value = l.y[i];
           updateLayoutUI(i);
+        }
+
+        if (parsed.fullCanvas !== undefined) {
+          document.getElementById('chkFullCanvas').checked = parsed.fullCanvas;
+          toggleFullCanvasMode(parsed.fullCanvas);
         }
         alert("✅ Preset tata letak layar berhasil dimuat!");
       } else {
@@ -405,7 +436,6 @@
       }
     }
 
-    // SISTEM TRANSMISI OUTPUT VIDETRON DENGAN STREAM CANVAS (100% PASTI TAMPIL & SUARA MASUK)
     function openOutputWindow() {
       if (outputWindow && !outputWindow.closed) {
         outputWindow.focus();
@@ -832,34 +862,65 @@
       }
     }
 
-    // DRAW ENGINE DENGAN PERHITUNGAN PRESISI KOORDINAT X & Y
+    // UTILITY UNTUK DRAW IMAGE COVER (MEMBUAT GAMBAR FULL TANPA GARIS HITAM)
+    function drawImageCover(ctx, img, x, y, w, h) {
+      const nw = img.naturalWidth || img.videoWidth || w;
+      const nh = img.naturalHeight || img.videoHeight || h;
+      
+      const aspectImg = nw / nh;
+      const aspectTarget = w / h;
+
+      let sx, sy, sw, sh;
+
+      if (aspectImg > aspectTarget) {
+        sh = nh;
+        sw = nh * aspectTarget;
+        sx = (nw - sw) / 2;
+        sy = 0;
+      } else {
+        sw = nw;
+        sh = nw / aspectTarget;
+        sx = 0;
+        sy = (nh - sh) / 2;
+      }
+
+      ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+    }
+
+    // DRAW ENGINE
     function draw() {
       ctx.fillStyle = "#000000";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      const sectionWidth = canvas.width / 3;
+      // JIKA MODE FULL CANVAS AKTIF DAN ADA MEDIA LAYAR TENGAH (INDEX 1)
+      if (isFullCanvasMode && activeMedia[1]) {
+        try {
+          drawImageCover(ctx, activeMedia[1], 0, 0, canvas.width, canvas.height);
+        } catch (err) {}
+      } else {
+        // MODE NORMAL: 3 SEGMEN
+        const sectionWidth = canvas.width / 3;
 
-      for (let i = 0; i < 3; i++) {
-        const media = activeMedia[i];
-        if (media) {
-          ctx.save();
+        for (let i = 0; i < 3; i++) {
+          const media = activeMedia[i];
+          if (media) {
+            ctx.save();
 
-          const targetW = sectionWidth * (layout.w[i] / 100);
-          const targetH = canvas.height * (layout.h[i] / 100);
+            const targetW = sectionWidth * (layout.w[i] / 100);
+            const targetH = canvas.height * (layout.h[i] / 100);
 
-          // Posisi X Standar + Offset Nilai X
-          const defaultX = (i * sectionWidth) + (sectionWidth - targetW) / 2;
-          const posX = defaultX + (layout.x[i] * 5); // 1 poin = 5px shift
+            const defaultX = (i * sectionWidth) + (sectionWidth - targetW) / 2;
+            const posX = defaultX + (layout.x[i] * 5);
 
-          // Posisi Y Standar + Offset Nilai Y
-          const defaultY = (canvas.height - targetH) / 2;
-          const posY = defaultY + (layout.y[i] * 5); // 1 poin = 5px shift
+            const defaultY = (canvas.height - targetH) / 2;
+            const posY = defaultY + (layout.y[i] * 5);
 
-          try {
-            ctx.drawImage(media, posX, posY, targetW, targetH);
-          } catch (err) {}
+            try {
+              drawImageCover(ctx, media, posX, posY, targetW, targetH);
+            } catch (err) {}
 
-          ctx.restore();
+            ctx.restore();
+          }
         }
       }
 
