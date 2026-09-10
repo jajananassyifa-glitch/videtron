@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Grand El Hajj Studio Engine - Pro Edition</title>
+  <title>Grand El Hajj Studio Engine - Videotron Native Edition</title>
   
-  <!-- LIBRARY EXTERNAL UNTUK BACA PDF & PPTX LANGSUNG -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
@@ -24,37 +23,45 @@
     .brand { font-weight: 800; font-size: 13px; color: #10b981; letter-spacing: 1.5px; }
     .btn-action { background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-weight: 600; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
     .btn-action:hover { background: #334155; color: #fff; }
+    .btn-popout { background: #0284c7; color: #fff; border: 1px solid #38bdf8; font-weight: bold; }
+    .btn-popout:hover { background: #0369a1; }
     .btn-live { background: #ef4444; color: #fff; border: none; font-weight: bold; }
     .btn-live:hover { background: #dc2626; }
+    .btn-live.streaming { animation: pulse 1.5s infinite; background: #22c55e; }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+      70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+    }
 
     .workspace { display: flex; flex-direction: column; flex: 1; height: calc(100vh - 42px); }
 
-    /* CANVAS & TOP PANEL */
-    .top-section { display: flex; height: 55%; background: #0b0c10; border-bottom: 1px solid #262b36; }
+    .top-section { display: flex; height: 50%; background: #0b0c10; border-bottom: 1px solid #262b36; }
     .canvas-box { flex: 1; background: #000; display: flex; flex-direction: column; position: relative; }
     .canvas-header { background: #161920; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #262b36; }
     .canvas-container { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; background: #000; }
     canvas { max-width: 100%; max-height: 100%; object-fit: contain; background: #050505; }
 
-    .canvas-container:fullscreen { width: 100vw; height: 100vh; background: #000; }
-    .canvas-container:fullscreen canvas { width: 100vw; height: 100vh; max-width: none; max-height: none; }
-
-    /* SIDE PANEL CONTROLLER */
-    .control-panel { width: 320px; background: #161920; border-left: 1px solid #262b36; padding: 10px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
+    .control-panel { width: 300px; background: #161920; border-left: 1px solid #262b36; padding: 10px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
     .section-title { font-weight: 700; color: #10b981; border-bottom: 1px solid #262b36; padding-bottom: 4px; font-size: 11px; margin-top: 4px; }
     .scale-group { display: flex; flex-direction: column; gap: 4px; background: #111318; padding: 6px; border-radius: 4px; border: 1px solid #262b36; }
     .scale-row { display: flex; align-items: center; gap: 6px; }
     .scale-row label { width: 75px; font-size: 10px; color: #94a3b8; }
     .scale-row input[type=range] { flex: 1; }
 
-    /* BOTTOM MATRIX GRID */
-    .matrix-section { display: flex; flex: 1; background: #0f1115; overflow: hidden; }
+    .bottom-section { display: flex; flex: 1; background: #0f1115; overflow: hidden; }
+    .matrix-section { flex: 1; display: flex; overflow: hidden; }
     .layers-stack { flex: 1; display: flex; flex-direction: column; padding: 8px; gap: 8px; overflow-y: auto; }
     .layer-row { display: flex; height: 115px; background: #161920; border: 1px solid #262b36; border-radius: 4px; }
-    .layer-head { width: 130px; background: #1a1e26; padding: 8px; border-right: 1px solid #262b36; display: flex; flex-direction: column; justify-content: center; }
+    .layer-head { width: 120px; background: #1a1e26; padding: 8px; border-right: 1px solid #262b36; display: flex; flex-direction: column; justify-content: center; }
     .clips-container { flex: 1; display: flex; gap: 8px; padding: 8px; overflow-x: auto; align-items: center; }
 
-    /* SLOT MATRIX UI */
+    .youtube-panel { width: 380px; background: #111318; border-left: 1px solid #262b36; display: flex; flex-direction: column; }
+    .youtube-header { background: #161920; padding: 6px 12px; font-weight: bold; color: #ef4444; border-bottom: 1px solid #262b36; display: flex; justify-content: space-between; align-items: center; }
+    .youtube-frame-container { flex: 1; background: #000; position: relative; }
+    .youtube-frame-container iframe { width: 100%; height: 100%; border: none; }
+
     .clip-slot {
       min-width: 125px; width: 125px; height: 100%; background: #1a1e26; border: 1px dashed #334155; border-radius: 4px;
       cursor: pointer; position: relative; overflow: hidden; display: flex; flex-direction: column;
@@ -74,7 +81,6 @@
     .btn-slot-opt { background: #334155; color: #fff; border: none; padding: 4px 6px; font-size: 9px; border-radius: 3px; cursor: pointer; width: 100%; text-align: center; }
     .btn-slot-opt:hover { background: #10b981; }
     .btn-slot-opt.cam { background: #0284c7; }
-    .btn-slot-opt.cam:hover { background: #0369a1; }
 
     .clip-controls {
       position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(15, 17, 21, 0.95);
@@ -82,21 +88,18 @@
     }
     .slide-nav-bar { display: flex; justify-content: space-between; align-items: center; background: #0f1115; border-radius: 2px; padding: 1px 2px; }
     .btn-ctrl { background: #334155; color: #fff; border: none; padding: 2px 5px; font-size: 9px; border-radius: 2px; cursor: pointer; }
-    .btn-ctrl:hover { background: #475569; }
     .btn-ctrl.danger { background: #ef4444; color: #fff; }
-    .btn-ctrl.danger:hover { background: #dc2626; }
 
-    /* MODAL PICKER KAMERA */
     .modal-backdrop {
       position: fixed; top:0; left:0; width:100vw; height:100vh;
       background: rgba(0,0,0,0.7); display:none; justify-content:center; align-items:center; z-index: 100;
     }
     .modal-box {
-      background: #161920; border: 1px solid #334155; border-radius: 6px; padding: 16px; width: 320px;
-      display: flex; flex-direction: column; gap: 12px; color: #fff;
+      background: #161920; border: 1px solid #334155; border-radius: 6px; padding: 16px; width: 380px;
+      display: flex; flex-direction: column; gap: 10px; color: #fff;
     }
-    .modal-box select {
-      background: #0f1115; color: #fff; border: 1px solid #334155; padding: 6px; border-radius: 4px; outline: none;
+    .modal-box input, .modal-box select {
+      background: #0f1115; color: #fff; border: 1px solid #334155; padding: 6px; border-radius: 4px; outline: none; font-size: 11px;
     }
     .modal-box button {
       background: #10b981; color: #fff; border: none; padding: 8px; border-radius: 4px; font-weight: bold; cursor: pointer;
@@ -108,8 +111,9 @@
   <header>
     <div class="brand">GRAND EL HAJJ // BROADCAST ENGINE</div>
     <div style="display:flex; gap:8px;">
-      <button class="btn-action btn-live" onclick="explainYouTubeLive()">🔴 PANDUAN LIVE STREAM YOUTUBE</button>
-      <button class="btn-action" onclick="toggleFullScreen()">🖥️ FULLSCREEN (1 LAYAR)</button>
+      <button class="btn-action btn-popout" onclick="openVideotronPopout()">🖥️ POP-OUT WINDOW (VIDETRON)</button>
+      <button class="btn-action btn-live" id="btnLiveControl" onclick="openLiveConfigModal()">🔴 MULAI LIVE STREAMING</button>
+      <button class="btn-action" onclick="toggleFullScreen()">🖥️ FULLSCREEN</button>
     </div>
   </header>
 
@@ -118,7 +122,7 @@
       <div class="canvas-box">
         <div class="canvas-header">
           <span style="font-weight:700; color:#38bdf8;">PROGRAM OUTPUT PREVIEW</span>
-          <span style="color:#94a3b8; font-size:10px;">CANVAS 1280x720 (60 FPS)</span>
+          <span style="color:#94a3b8; font-size:10px;">CANVAS 1280x720 (30 FPS)</span>
         </div>
         <div class="canvas-container" id="canvasContainer">
           <canvas id="masterCanvas" width="1280" height="720"></canvas>
@@ -151,35 +155,68 @@
       </div>
     </div>
 
-    <div class="matrix-section">
-      <div class="layers-stack">
-        <div class="layer-row">
-          <div class="layer-head">
-            <span style="color:#38bdf8; font-weight:700;">LAYAR KANAN</span>
-            <span style="color:#64748b; font-size:9px;">Index Layer: 2</span>
+    <div class="bottom-section">
+      <div class="matrix-section">
+        <div class="layers-stack">
+          <div class="layer-row">
+            <div class="layer-head">
+              <span style="color:#38bdf8; font-weight:700;">LAYAR KANAN</span>
+              <span style="color:#64748b; font-size:9px;">Index Layer: 2</span>
+            </div>
+            <div class="clips-container" id="layer2-clips"></div>
           </div>
-          <div class="clips-container" id="layer2-clips"></div>
-        </div>
 
-        <div class="layer-row">
-          <div class="layer-head">
-            <span style="color:#10b981; font-weight:700;">LAYAR TENGAH</span>
-            <span style="color:#64748b; font-size:9px;">Index Layer: 1</span>
+          <div class="layer-row">
+            <div class="layer-head">
+              <span style="color:#10b981; font-weight:700;">LAYAR TENGAH</span>
+              <span style="color:#64748b; font-size:9px;">Index Layer: 1</span>
+            </div>
+            <div class="clips-container" id="layer1-clips"></div>
           </div>
-          <div class="clips-container" id="layer1-clips"></div>
-        </div>
 
-        <div class="layer-row">
-          <div class="layer-head">
-            <span style="color:#f59e0b; font-weight:700;">LAYAR KIRI</span>
-            <span style="color:#64748b; font-size:9px;">Index Layer: 0</span>
+          <div class="layer-row">
+            <div class="layer-head">
+              <span style="color:#f59e0b; font-weight:700;">LAYAR KIRI</span>
+              <span style="color:#64748b; font-size:9px;">Index Layer: 0</span>
+            </div>
+            <div class="clips-container" id="layer0-clips"></div>
           </div>
-          <div class="clips-container" id="layer0-clips"></div>
+        </div>
+      </div>
+
+      <div class="youtube-panel" id="youtubePanel">
+        <div class="youtube-header">
+          <span>📺 YOUTUBE LIVE MONITOR & CHAT</span>
+          <button class="btn-ctrl" onclick="reloadYouTubeIframe()">🔄 Refresh</button>
+        </div>
+        <div class="youtube-frame-container" id="ytContainer">
+          <div style="padding:20px; text-align:center; color:#64748b;">
+            Fitur Live Monitoring YouTube Chat aktif di sini saat streaming berjalan.
+          </div>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- MODAL CONFIGURASI LIVE -->
+  <div class="modal-backdrop" id="liveModal">
+    <div class="modal-box">
+      <div style="font-weight:bold; font-size:12px; color:#ef4444;">🔴 KONFIGURASI LIVE STREAMING DIRECT</div>
+      <label>1. Stream Key YouTube Anda:</label>
+      <input type="password" id="ytStreamKeyInput" placeholder="Masukkan Stream Key dari YouTube Studio">
+      <label>2. YouTube Video ID (Untuk Live Chat):</label>
+      <input type="text" id="ytVideoIdInput" placeholder="Contoh: dQw4w9WgXcQ">
+      <label>3. Server Relay (Node.js Local):</label>
+      <input type="text" id="relayServerInput" value="ws://localhost:8080">
+
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <button style="flex:1; background:#ef4444;" onclick="startDirectLive()">MULAI BROADCAST NATIVE</button>
+        <button style="background:#334155; width:70px;" onclick="closeLiveModal()">Batal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL PICKER KAMERA -->
   <div class="modal-backdrop" id="cameraModal">
     <div class="modal-box">
       <div style="font-weight:bold; font-size:12px;">📹 PILIH SOURCE KAMERA</div>
@@ -203,6 +240,13 @@
     const slotData = {}; 
     let targetUploadKey = null;
     let pendingCamKey = null;
+    let isLiveStreaming = false;
+    let mediaRecorder = null;
+    let socket = null;
+
+    // POP-OUT WINDOW VARS
+    let popoutWindow = null;
+    let popoutCtx = null;
 
     const layout = {
       w: [100, 100, 100],
@@ -221,7 +265,6 @@
           slotEl.id = `slot-${key}`;
           slotEl.tabIndex = 0;
 
-          slotEl.addEventListener('paste', (e) => handlePasteEvent(e, key));
           renderEmptySlot(slotEl, key);
           container.appendChild(slotEl);
         }
@@ -236,6 +279,114 @@
           <span style="font-size:7px; color:#64748b; text-align:center;">(MP4/JPG/PDF/PPTX)</span>
         </div>
       `;
+    }
+
+    // FITUR POP-OUT UNTUK VIDETRON
+    function openVideotronPopout() {
+      if (popoutWindow && !popoutWindow.closed) {
+        popoutWindow.focus();
+        return;
+      }
+
+      popoutWindow = window.open('', 'VideotronOutputWindow', 'width=1280,height=720,menubar=no,toolbar=no,location=no,status=no');
+      
+      popoutWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>VIDETRON PROGRAM OUTPUT</title>
+          <style>
+            * { margin:0; padding:0; overflow:hidden; background:#000; }
+            body, html { width:100%; height:100%; display:flex; justify-content:center; align-items:center; }
+            canvas { width:100vw; height:100vh; object-fit:contain; }
+          </style>
+        </head>
+        <body>
+          <canvas id="popCanvas" width="1280" height="720"></canvas>
+        </body>
+        </html>
+      `);
+
+      popoutWindow.document.close();
+      const popCanvas = popoutWindow.document.getElementById('popCanvas');
+      popoutCtx = popCanvas.getContext('2d');
+    }
+
+    function openLiveConfigModal() {
+      document.getElementById('liveModal').style.display = 'flex';
+    }
+
+    function closeLiveModal() {
+      document.getElementById('liveModal').style.display = 'none';
+    }
+
+    function startDirectLive() {
+      const streamKey = document.getElementById('ytStreamKeyInput').value.trim();
+      const videoId = document.getElementById('ytVideoIdInput').value.trim();
+      const relayServer = document.getElementById('relayServerInput').value.trim();
+
+      if (!streamKey) {
+        alert("Harap masukkan Stream Key YouTube Anda!");
+        return;
+      }
+
+      closeLiveModal();
+
+      const container = document.getElementById('ytContainer');
+      if (videoId) {
+        const domain = window.location.hostname || 'localhost';
+        container.innerHTML = `<iframe src="https://www.youtube.com/live_chat?v=${videoId}&embed_domain=${domain}"></iframe>`;
+      }
+
+      const btn = document.getElementById('btnLiveControl');
+
+      if (!isLiveStreaming) {
+        socket = new WebSocket(`${relayServer}?key=${streamKey}`);
+
+        socket.onopen = () => {
+          const stream = canvas.captureStream(30);
+          mediaRecorder = new MediaRecorder(stream, {
+            mimeType: 'video/webm;codecs=h264',
+            videoBitsPerSecond: 3000000
+          });
+
+          mediaRecorder.ondataavailable = (e) => {
+            if (e.data.size > 0 && socket.readyState === WebSocket.OPEN) {
+              socket.send(e.data);
+            }
+          };
+
+          mediaRecorder.start(250);
+          isLiveStreaming = true;
+          btn.classList.add('streaming');
+          btn.innerText = '🟢 BROADCASTING LIVE (ACTIVE)';
+        };
+
+        socket.onerror = (err) => {
+          alert("Gagal terhubung ke Relay Server! Pastikan Node.js server berjalan.");
+        };
+
+        socket.onclose = () => {
+          if (isLiveStreaming) stopLiveStream();
+        };
+      } else {
+        stopLiveStream();
+      }
+    }
+
+    function stopLiveStream() {
+      if (mediaRecorder) mediaRecorder.stop();
+      if (socket) socket.close();
+      isLiveStreaming = false;
+
+      const btn = document.getElementById('btnLiveControl');
+      btn.classList.remove('streaming');
+      btn.innerText = '🔴 MULAI LIVE STREAMING';
+    }
+
+    function reloadYouTubeIframe() {
+      const iframe = document.querySelector('#ytContainer iframe');
+      if (iframe) iframe.src = iframe.src;
     }
 
     function triggerFileUpload(key, event) {
@@ -278,7 +429,6 @@
       }
     }
 
-    // MEMPROSES SEMUA HALAMAN PDF DAN BISA DI-SLIDE
     async function processPdfFile(file, key) {
       try {
         const arrayBuffer = await file.arrayBuffer();
@@ -303,7 +453,6 @@
       }
     }
 
-    // MEMPROSES SLIDE PADA PPTX
     async function processPptxFile(file, key) {
       try {
         const zip = await JSZip.loadAsync(file);
@@ -319,7 +468,7 @@
         if (slides.length > 0) {
           loadSlideImages(key, slides, 'PPTX SLIDE');
         } else {
-          alert("PPTX terdeteksi, namun tidak ditemukan gambar slide yang dapat diekstrak. Disarankan ekspor PPT ke PDF/JPG terlebih dahulu.");
+          alert("PPTX terdeteksi, namun tidak ditemukan gambar slide.");
         }
       } catch (err) {
         alert("Gagal membaca struktur PPTX: " + err.message);
@@ -366,7 +515,6 @@
       }
     }
 
-    // MODAL KAMERA SELECTION
     async function openCameraModal(key, event) {
       if(event) event.stopPropagation();
       pendingCamKey = key;
@@ -380,7 +528,7 @@
         select.innerHTML = '';
 
         if (videoDevices.length === 0) {
-          alert("Tidak ada perangkat kamera eksternal/webcam yang terdeteksi!");
+          alert("Tidak ada perangkat kamera eksternal yang terdeteksi!");
           return;
         }
 
@@ -393,7 +541,7 @@
 
         document.getElementById('cameraModal').style.display = 'flex';
       } catch (err) {
-        alert("Akses kamera ditolak atau tidak ditemukan: " + err.message);
+        alert("Akses kamera ditolak: " + err.message);
       }
     }
 
@@ -423,26 +571,7 @@
         slotData[key] = { media: video, isVideo: true, isCam: true, stream: stream, typeName: 'KAMERA' };
         renderSlotUI(key);
       } catch (err) {
-        alert("Gagal mengaktifkan source kamera: " + err.message);
-      }
-    }
-
-    function handlePasteEvent(e, key) {
-      const items = (e.clipboardData || e.originalEvent.clipboardData).items;
-      for (let index in items) {
-        const item = items[index];
-        if (item.kind === 'file' && item.type.startsWith('image/')) {
-          const blob = item.getAsFile();
-          const fileUrl = URL.createObjectURL(blob);
-          const img = new Image();
-          img.src = fileUrl;
-          img.onload = () => {
-            slotData[key] = { media: img, isVideo: false, isCam: false, url: fileUrl, typeName: 'PASTE IMG' };
-            renderSlotUI(key);
-          };
-          e.preventDefault();
-          break;
-        }
+        alert("Gagal mengaktifkan kamera: " + err.message);
       }
     }
 
@@ -585,16 +714,6 @@
       }
     }
 
-    function explainYouTubeLive() {
-      alert(
-        "CARA LIVE STREAMING KE YOUTUBE:\n\n" +
-        "1. Buka aplikasi OBS Studio di laptop/PC kamu.\n" +
-        "2. Masukkan Source di OBS: 'Window Capture' atau 'Browser Source' pilih jendela web aplikasi ini.\n" +
-        "3. (Atau) Gunakan fitur 'Fullscreen (1 Layar)' di aplikasi ini lalu Share Screen / Window Capture pada OBS.\n" +
-        "4. Masukkan Stream Key YouTube kamu ke OBS Studio, lalu klik 'Start Streaming'!"
-      );
-    }
-
     function draw() {
       ctx.fillStyle = "#050505";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -634,6 +753,11 @@
             ctx.restore();
           }
         }
+      }
+
+      // DUPLIKASI GAMBAR KE JENDELA POP-OUT VIDETRON JIKA DIPAKAI (MODE EXTEND)
+      if (popoutWindow && !popoutWindow.closed && popoutCtx) {
+        popoutCtx.drawImage(canvas, 0, 0);
       }
 
       requestAnimationFrame(draw);
