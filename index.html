@@ -3,22 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Grand El Hajj Studio Engine - Fixed Canvas & Video Output</title>
+  <title>Grand El Hajj Studio Engine - Full Output Fixed</title>
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-    body {
+    html, body {
+      width: 100%; height: 100%; background-color: #0f1115; color: #d1d5db;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      height: 100vh; background-color: #0f1115; color: #d1d5db;
       display: flex; flex-direction: column; overflow: hidden; font-size: 11px;
     }
 
     header {
       height: 42px; background: #161920; border-bottom: 1px solid #262b36;
       display: flex; align-items: center; justify-content: space-between; padding: 0 12px;
+      flex-shrink: 0;
     }
     .brand { font-weight: 800; font-size: 13px; color: #10b981; letter-spacing: 1.5px; }
     
@@ -31,17 +32,25 @@
     .btn-preset { background: #8b5cf6; color: #fff; border: 1px solid #a78bfa; font-weight: 600; }
     .btn-preset:hover { background: #7c3aed; }
 
-    .workspace { display: flex; flex-direction: column; flex: 1; height: calc(100vh - 42px); }
+    .workspace { display: flex; flex-direction: column; flex: 1; height: calc(100vh - 42px); overflow: hidden; }
 
-    .top-section { display: flex; height: 52%; background: #0b0c10; border-bottom: 1px solid #262b36; }
-    .canvas-box { flex: 1; background: #000; display: flex; flex-direction: column; position: relative; }
-    .canvas-header { background: #161920; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #262b36; }
-    .canvas-container { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; background: #000; }
+    .top-section { display: flex; height: 55%; background: #0b0c10; border-bottom: 1px solid #262b36; }
+    .canvas-box { flex: 1; background: #000; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+    .canvas-header { background: #161920; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #262b36; flex-shrink: 0; }
     
-    /* Kanvas fleksibel agar selalu mengisi layar secara proporsional */
-    canvas { width: 100%; height: 100%; object-fit: fill; background: #000; }
+    /* Wadah Kanvas yang dipaksa Penuh */
+    .canvas-container {
+      flex: 1; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden; background: #000;
+    }
+    
+    /* Kanvas dipaksa Stretch Penuh tanpa Margin */
+    canvas {
+      position: absolute; top: 0; left: 0; width: 100% !important; height: 100% !important;
+      object-fit: fill; background: #000;
+    }
 
-    .control-panel { width: 330px; background: #161920; border-left: 1px solid #262b36; padding: 8px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
+    .control-panel { width: 330px; background: #161920; border-left: 1px solid #262b36; padding: 8px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; flex-shrink: 0; }
     .section-title { font-weight: 700; color: #10b981; border-bottom: 1px solid #262b36; padding-bottom: 4px; font-size: 11px; margin-top: 2px; display: flex; justify-content: space-between; align-items: center; }
     
     .scale-group { display: flex; flex-direction: column; gap: 4px; background: #111318; padding: 6px 8px; border-radius: 4px; border: 1px solid #262b36; }
@@ -61,10 +70,10 @@
     .matrix-section { flex: 1; display: flex; overflow: hidden; }
     .layers-stack { flex: 1; display: flex; flex-direction: column; padding: 8px; gap: 8px; overflow-y: auto; }
     .layer-row { display: flex; height: 115px; background: #161920; border: 1px solid #262b36; border-radius: 4px; }
-    .layer-head { width: 120px; background: #1a1e26; padding: 8px; border-right: 1px solid #262b36; display: flex; flex-direction: column; justify-content: center; }
+    .layer-head { width: 120px; background: #1a1e26; padding: 8px; border-right: 1px solid #262b36; display: flex; flex-direction: column; justify-content: center; flex-shrink: 0; }
     .clips-container { flex: 1; display: flex; gap: 8px; padding: 8px; overflow-x: auto; align-items: center; }
 
-    .youtube-panel { width: 320px; background: #111318; border-left: 1px solid #262b36; display: flex; flex-direction: column; }
+    .youtube-panel { width: 320px; background: #111318; border-left: 1px solid #262b36; display: flex; flex-direction: column; flex-shrink: 0; }
     .youtube-header { background: #161920; padding: 6px 12px; font-weight: bold; color: #ef4444; border-bottom: 1px solid #262b36; display: flex; justify-content: space-between; align-items: center; }
     .youtube-frame-container { flex: 1; background: #000; position: relative; }
     .youtube-frame-container iframe { width: 100%; height: 100%; border: none; }
@@ -118,7 +127,7 @@
 <body>
 
   <header>
-    <div class="brand">GRAND EL HAJJ // STUDIO PRO v3.2</div>
+    <div class="brand">GRAND EL HAJJ // STUDIO PRO v3.3</div>
     <div style="display:flex; gap:6px;">
       <button class="btn-action btn-preset" onclick="savePreset()">💾 SIMPAN PRESET</button>
       <button class="btn-action btn-preset" onclick="loadPreset()">📂 MUAT PRESET</button>
@@ -133,10 +142,10 @@
       <div class="canvas-box">
         <div class="canvas-header">
           <span style="font-weight:700; color:#38bdf8;">PROGRAM OUTPUT PREVIEW</span>
-          <span style="color:#94a3b8; font-size:10px;">MASTER CANVAS: 1280x720 (FULL HD 16:9)</span>
+          <span style="color:#94a3b8; font-size:10px;">MASTER CANVAS: FULL SCREEN STRETCH</span>
         </div>
         <div class="canvas-container" id="canvasContainer">
-          <canvas id="masterCanvas" width="1280" height="720"></canvas>
+          <canvas id="masterCanvas" width="1920" height="1080"></canvas>
         </div>
       </div>
 
@@ -164,12 +173,12 @@
           </div>
           <div class="scale-row">
             <label>Posisi X:</label>
-            <input type="range" id="x2" min="-100" max="100" value="0" oninput="updateLayoutUI(2)">
+            <input type="range" id="x2" min="-500" max="500" value="0" oninput="updateLayoutUI(2)">
             <span class="val-badge" id="v_x2">0</span>
           </div>
           <div class="scale-row">
             <label>Posisi Y:</label>
-            <input type="range" id="y2" min="-100" max="100" value="0" oninput="updateLayoutUI(2)">
+            <input type="range" id="y2" min="-500" max="500" value="0" oninput="updateLayoutUI(2)">
             <span class="val-badge" id="v_y2">0</span>
           </div>
         </div>
@@ -199,12 +208,12 @@
             </div>
             <div class="scale-row">
               <label>Posisi X:</label>
-              <input type="range" id="x1" min="-100" max="100" value="0" oninput="updateLayoutUI(1)">
+              <input type="range" id="x1" min="-500" max="500" value="0" oninput="updateLayoutUI(1)">
               <span class="val-badge" id="v_x1">0</span>
             </div>
             <div class="scale-row">
               <label>Posisi Y:</label>
-              <input type="range" id="y1" min="-100" max="100" value="0" oninput="updateLayoutUI(1)">
+              <input type="range" id="y1" min="-500" max="500" value="0" oninput="updateLayoutUI(1)">
               <span class="val-badge" id="v_y1">0</span>
             </div>
           </div>
@@ -228,12 +237,12 @@
           </div>
           <div class="scale-row">
             <label>Posisi X:</label>
-            <input type="range" id="x0" min="-100" max="100" value="0" oninput="updateLayoutUI(0)">
+            <input type="range" id="x0" min="-500" max="500" value="0" oninput="updateLayoutUI(0)">
             <span class="val-badge" id="v_x0">0</span>
           </div>
           <div class="scale-row">
             <label>Posisi Y:</label>
-            <input type="range" id="y0" min="-100" max="100" value="0" oninput="updateLayoutUI(0)">
+            <input type="range" id="y0" min="-500" max="500" value="0" oninput="updateLayoutUI(0)">
             <span class="val-badge" id="v_y0">0</span>
           </div>
         </div>
@@ -445,14 +454,14 @@
       }
     }
 
-    /* FITUR OUTPUT VIDETRON TIPE VMIX (TERPISAH & FULL SCREEN) */
+    /* FITUR OUTPUT VIDETRON TERPISAH DENGAN RENDER FULL STRETCH */
     function openOutputWindow() {
       if (outputWindow && !outputWindow.closed) {
         outputWindow.focus();
         return;
       }
 
-      outputWindow = window.open('', 'VidetronOutputWin', 'width=1280,height=720,menubar=no,toolbar=no,location=no,resizable=yes');
+      outputWindow = window.open('', 'VidetronOutputWin', 'width=1920,height=1080,menubar=no,toolbar=no,location=no,resizable=yes');
 
       if (!outputWindow) {
         alert("Browser memblokir Pop-up. Harap izinkan Pop-up di samping kiri URL browser!");
@@ -466,8 +475,8 @@
           <title>VIDETRON CLEAN OUTPUT</title>
           <style>
             * { margin:0; padding:0; background:#000; overflow:hidden; }
-            body, html { width:100vw; height:100vh; display:flex; justify-content:center; align-items:center; }
-            video { width:100vw; height:100vh; object-fit:fill; cursor:pointer; }
+            html, body { width:100vw; height:100vh; display:flex; justify-content:center; align-items:center; background:#000; }
+            video { width:100vw; height:100vh; object-fit:fill !important; cursor:pointer; display:block; border:none; outline:none; }
             .hint {
               position: absolute; top:10px; left:10px; background:rgba(0,0,0,0.8);
               color:#10b981; padding:8px 12px; font-family:sans-serif; font-size:12px;
@@ -504,7 +513,7 @@
 
       setTimeout(() => {
         const videoEl = outputWindow.document.getElementById('outVideo');
-        const stream = canvas.captureStream(30);
+        const stream = canvas.captureStream(60);
         videoEl.srcObject = stream;
         videoEl.play().catch(e => console.log(e));
       }, 500);
@@ -553,7 +562,7 @@
           const stream = canvas.captureStream(30);
           mediaRecorder = new MediaRecorder(stream, {
             mimeType: 'video/webm;codecs=h264',
-            videoBitsPerSecond: 3000000
+            videoBitsPerSecond: 4000000
           });
 
           mediaRecorder.ondataavailable = (e) => {
@@ -638,7 +647,7 @@
 
         for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
           const page = await pdf.getPage(pageNum);
-          const viewport = page.getViewport({ scale: 1.5 });
+          const viewport = page.getViewport({ scale: 2.0 });
           const tempCanvas = document.createElement('canvas');
           const tempCtx = tempCanvas.getContext('2d');
           tempCanvas.width = viewport.width;
@@ -760,7 +769,7 @@
 
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { deviceId: { exact: deviceId } },
+          video: { deviceId: { exact: deviceId }, width: { ideal: 1920 }, height: { ideal: 1080 } },
           audio: true
         });
 
@@ -928,12 +937,12 @@
       requestAnimationFrame(renderCanvasLoop);
     }
 
-    /* PENGGAMBARAN FULL PENUH KE KOORDINAT DAN BINGKAI LAYAR */
+    /* PENGGAMBARAN FULL STRETCH PAKSA KE SULURUH AREA KANVAS */
     function drawMediaStretch(media, x, y, width, height) {
       try {
         ctx.drawImage(media, x, y, width, height);
       } catch (e) {
-        console.error("Frame media belum siap:", e);
+        // Mencegah error jika video belum siap diputar
       }
     }
 
