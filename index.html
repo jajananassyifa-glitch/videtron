@@ -39,7 +39,7 @@
     .canvas-container { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; background: #000; }
     
     /* Kanvas fleksibel agar selalu mengisi layar secara proporsional */
-    canvas { width: 100%; height: 100%; object-fit: contain; background: #000; }
+    canvas { width: 100%; height: 100%; object-fit: fill; background: #000; }
 
     .control-panel { width: 330px; background: #161920; border-left: 1px solid #262b36; padding: 8px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
     .section-title { font-weight: 700; color: #10b981; border-bottom: 1px solid #262b36; padding-bottom: 4px; font-size: 11px; margin-top: 2px; display: flex; justify-content: space-between; align-items: center; }
@@ -124,7 +124,7 @@
       <button class="btn-action btn-preset" onclick="loadPreset()">📂 MUAT PRESET</button>
       <button class="btn-action btn-videtron" onclick="openOutputWindow()">📺 OUT VIDETRON</button>
       <button class="btn-action btn-live" id="btnLiveControl" onclick="openLiveConfigModal()">🔴 LIVE YOUTUBE</button>
-      <button class="btn-action" onclick="toggleFullScreen()">🖥️ FULLSCREEN</button>
+      <button class="btn-action" onclick="toggleFullScreen()">🖥️ FULLSCREEN STUDIO</button>
     </div>
   </header>
 
@@ -445,13 +445,14 @@
       }
     }
 
+    /* FITUR OUTPUT VIDETRON TIPE VMIX (TERPISAH & FULL SCREEN) */
     function openOutputWindow() {
       if (outputWindow && !outputWindow.closed) {
         outputWindow.focus();
         return;
       }
 
-      outputWindow = window.open('', '_blank', 'width=1280,height=720,menubar=no,toolbar=no,location=no');
+      outputWindow = window.open('', 'VidetronOutputWin', 'width=1280,height=720,menubar=no,toolbar=no,location=no,resizable=yes');
 
       if (!outputWindow) {
         alert("Browser memblokir Pop-up. Harap izinkan Pop-up di samping kiri URL browser!");
@@ -466,11 +467,36 @@
           <style>
             * { margin:0; padding:0; background:#000; overflow:hidden; }
             body, html { width:100vw; height:100vh; display:flex; justify-content:center; align-items:center; }
-            video { width:100vw; height:100vh; object-fit:cover; }
+            video { width:100vw; height:100vh; object-fit:fill; cursor:pointer; }
+            .hint {
+              position: absolute; top:10px; left:10px; background:rgba(0,0,0,0.8);
+              color:#10b981; padding:8px 12px; font-family:sans-serif; font-size:12px;
+              border-radius:4px; pointer-events:none; transition:opacity 1s; z-index:10;
+            }
           </style>
         </head>
         <body>
+          <div class="hint" id="hintBox">Double Click / Tekan 'F' untuk Full Screen Videtron</div>
           <video id="outVideo" autoplay playsinline muted></video>
+          <script>
+            const vid = document.getElementById('outVideo');
+            const hint = document.getElementById('hintBox');
+            
+            setTimeout(() => { if(hint) hint.style.opacity = '0'; }, 4000);
+
+            function goFullscreen() {
+              if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => console.log(err));
+              } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+              }
+            }
+
+            vid.addEventListener('dblclick', goFullscreen);
+            window.addEventListener('keydown', (e) => {
+              if (e.key === 'f' || e.key === 'F') goFullscreen();
+            });
+          <\/script>
         </body>
         </html>
       `);
@@ -759,7 +785,6 @@
         if (item.isVideo && !item.isCam) item.media.pause();
         activeMedia[layer] = null;
       } else {
-        // Matikan media aktif sebelumnya di layer yang sama jika berbentuk video
         const prevMedia = activeMedia[layer];
         if (prevMedia && prevMedia.tagName === 'VIDEO') {
           prevMedia.pause();
@@ -767,7 +792,6 @@
 
         activeMedia[layer] = item.media;
         
-        // PASTI BISA DIMAINKAN & MASUK GAMBAR DENGAN PLAY LOGIC
         if (item.isVideo) {
           item.media.muted = false;
           const playPromise = item.media.play();
@@ -880,7 +904,7 @@
       const sectionWidth = canvas.width / 3;
 
       if (isFullCanvasMode && activeMedia[1]) {
-        drawMediaCover(activeMedia[1], 0, 0, canvas.width, canvas.height);
+        drawMediaStretch(activeMedia[1], 0, 0, canvas.width, canvas.height);
       } else {
         for (let i = 0; i < 3; i++) {
           const media = activeMedia[i];
@@ -897,19 +921,19 @@
           const finalX = baseX + layout.x[i];
           const finalY = baseY + layout.y[i];
 
-          drawMediaCover(media, finalX, finalY, targetW, targetH);
+          drawMediaStretch(media, finalX, finalY, targetW, targetH);
         }
       }
 
       requestAnimationFrame(renderCanvasLoop);
     }
 
-    // FUNGSI SUDAH DIPERBAIKI (LAYAR DIRENSANGKAN FULL PENUH TANPA TERPOTONG)
-    function drawMediaCover(media, x, y, width, height) {
+    /* PENGGAMBARAN FULL PENUH KE KOORDINAT DAN BINGKAI LAYAR */
+    function drawMediaStretch(media, x, y, width, height) {
       try {
         ctx.drawImage(media, x, y, width, height);
       } catch (e) {
-        console.error("Gagal merefresh frame media:", e);
+        console.error("Frame media belum siap:", e);
       }
     }
 
