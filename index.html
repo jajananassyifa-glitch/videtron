@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Grand El Hajj Studio Engine - Full Output Fixed</title>
+  <title>Grand El Hajj Studio Engine - Dual Display Videtron</title>
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -38,13 +38,11 @@
     .canvas-box { flex: 1; background: #000; display: flex; flex-direction: column; position: relative; overflow: hidden; }
     .canvas-header { background: #161920; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #262b36; flex-shrink: 0; }
     
-    /* Wadah Kanvas yang dipaksa Penuh */
     .canvas-container {
       flex: 1; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
       position: relative; overflow: hidden; background: #000;
     }
     
-    /* Kanvas dipaksa Stretch Penuh tanpa Margin */
     canvas {
       position: absolute; top: 0; left: 0; width: 100% !important; height: 100% !important;
       object-fit: fill; background: #000;
@@ -127,11 +125,11 @@
 <body>
 
   <header>
-    <div class="brand">GRAND EL HAJJ // STUDIO PRO v3.3</div>
+    <div class="brand">GRAND EL HAJJ // STUDIO PRO v3.4</div>
     <div style="display:flex; gap:6px;">
       <button class="btn-action btn-preset" onclick="savePreset()">💾 SIMPAN PRESET</button>
       <button class="btn-action btn-preset" onclick="loadPreset()">📂 MUAT PRESET</button>
-      <button class="btn-action btn-videtron" onclick="openOutputWindow()">📺 OUT VIDETRON</button>
+      <button class="btn-action btn-videtron" onclick="openOutputWindow()">📺 OUT VIDETRON (EXTEND)</button>
       <button class="btn-action btn-live" id="btnLiveControl" onclick="openLiveConfigModal()">🔴 LIVE YOUTUBE</button>
       <button class="btn-action" onclick="toggleFullScreen()">🖥️ FULLSCREEN STUDIO</button>
     </div>
@@ -141,8 +139,8 @@
     <div class="top-section">
       <div class="canvas-box">
         <div class="canvas-header">
-          <span style="font-weight:700; color:#38bdf8;">PROGRAM OUTPUT PREVIEW</span>
-          <span style="color:#94a3b8; font-size:10px;">MASTER CANVAS: FULL SCREEN STRETCH</span>
+          <span style="font-weight:700; color:#38bdf8;">PROGRAM OUTPUT PREVIEW (LAPTOP)</span>
+          <span style="color:#94a3b8; font-size:10px;">MASTER CANVAS: 1920x1080</span>
         </div>
         <div class="canvas-container" id="canvasContainer">
           <canvas id="masterCanvas" width="1920" height="1080"></canvas>
@@ -155,7 +153,6 @@
           <button class="btn-reset-small" onclick="resetAllLayout()">Reset Semua</button>
         </div>
 
-        <!-- LAYAR 3: KANAN -->
         <div class="scale-group">
           <div class="scale-header">
             <span style="color:#38bdf8;">1. Layar Kanan (Index 2)</span>
@@ -183,7 +180,6 @@
           </div>
         </div>
 
-        <!-- LAYAR 2: TENGAH DENGAN FITUR FULL CANVAS -->
         <div class="scale-group">
           <div class="scale-header">
             <span style="color:#10b981;">2. Layar Tengah (Index 1)</span>
@@ -191,7 +187,7 @@
           </div>
 
           <div class="full-mode-box">
-            <label for="chkFullCanvas">🖥️ FULL CANVAS (FULLSCREEN COVER)</label>
+            <label for="chkFullCanvas">🖥️ FULL CANVAS (COVER ALL)</label>
             <input type="checkbox" id="chkFullCanvas" onchange="toggleFullCanvasMode(this.checked)">
           </div>
 
@@ -219,7 +215,6 @@
           </div>
         </div>
 
-        <!-- LAYAR 1: KIRI -->
         <div class="scale-group">
           <div class="scale-header">
             <span style="color:#f59e0b;">3. Layar Kiri (Index 0)</span>
@@ -423,10 +418,7 @@
     }
 
     function savePreset() {
-      const stateData = {
-        layout: layout,
-        fullCanvas: isFullCanvasMode
-      };
+      const stateData = { layout: layout, fullCanvas: isFullCanvasMode };
       localStorage.setItem('grand_el_hajj_preset', JSON.stringify(stateData));
       alert("✅ Preset tata letak layar berhasil disimpan!");
     }
@@ -454,17 +446,18 @@
       }
     }
 
-    /* FITUR OUTPUT VIDETRON TERPISAH DENGAN RENDER FULL STRETCH */
+    /* BUKA JENDELA OUTPUT CLEAN UNTUK LAYAR VIDETRON */
     function openOutputWindow() {
       if (outputWindow && !outputWindow.closed) {
         outputWindow.focus();
         return;
       }
 
-      outputWindow = window.open('', 'VidetronOutputWin', 'width=1920,height=1080,menubar=no,toolbar=no,location=no,resizable=yes');
+      // Membuka jendela terpisah tanpa URL bar / kontrol studio
+      outputWindow = window.open('', 'VidetronCleanOutput', 'width=1920,height=1080,menubar=no,toolbar=no,location=no,status=no,scrollbars=no,resizable=yes');
 
       if (!outputWindow) {
-        alert("Browser memblokir Pop-up. Harap izinkan Pop-up di samping kiri URL browser!");
+        alert("Browser memblokir Pop-up! Harap izinkan Pop-up untuk membuka Output Videtron.");
         return;
       }
 
@@ -478,20 +471,20 @@
             html, body { width:100vw; height:100vh; display:flex; justify-content:center; align-items:center; background:#000; }
             video { width:100vw; height:100vh; object-fit:fill !important; cursor:pointer; display:block; border:none; outline:none; }
             .hint {
-              position: absolute; top:10px; left:10px; background:rgba(0,0,0,0.8);
-              color:#10b981; padding:8px 12px; font-family:sans-serif; font-size:12px;
-              border-radius:4px; pointer-events:none; transition:opacity 1s; z-index:10;
+              position: absolute; top:12px; left:12px; background:rgba(0,0,0,0.85);
+              color:#10b981; padding:8px 14px; font-family:sans-serif; font-size:12px;
+              border-radius:4px; pointer-events:none; transition:opacity 1s; z-index:10; border:1px solid #10b981;
             }
           </style>
         </head>
         <body>
-          <div class="hint" id="hintBox">Double Click / Tekan 'F' untuk Full Screen Videtron</div>
+          <div class="hint" id="hintBox">Tarik jendela ini ke Layar Videtron, lalu Tekan 'F' / Double Click untuk Fullscreen</div>
           <video id="outVideo" autoplay playsinline muted></video>
           <script>
             const vid = document.getElementById('outVideo');
             const hint = document.getElementById('hintBox');
             
-            setTimeout(() => { if(hint) hint.style.opacity = '0'; }, 4000);
+            setTimeout(() => { if(hint) hint.style.opacity = '0'; }, 5000);
 
             function goFullscreen() {
               if (!document.fullscreenElement) {
@@ -511,6 +504,7 @@
       `);
       outputWindow.document.close();
 
+      // Menghubungkan Canvas Studio dengan Video Output Videtron
       setTimeout(() => {
         const videoEl = outputWindow.document.getElementById('outVideo');
         const stream = canvas.captureStream(60);
@@ -806,7 +800,6 @@
           const playPromise = item.media.play();
           if (playPromise !== undefined) {
             playPromise.catch(err => {
-              console.warn("Autoplay ditolak browser, mencoba tanpa audio (muted):", err);
               item.media.muted = true;
               item.media.play();
             });
@@ -937,13 +930,10 @@
       requestAnimationFrame(renderCanvasLoop);
     }
 
-    /* PENGGAMBARAN FULL STRETCH PAKSA KE SULURUH AREA KANVAS */
     function drawMediaStretch(media, x, y, width, height) {
       try {
         ctx.drawImage(media, x, y, width, height);
-      } catch (e) {
-        // Mencegah error jika video belum siap diputar
-      }
+      } catch (e) {}
     }
 
     window.onload = init;
