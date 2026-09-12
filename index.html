@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Grand El Hajj Studio Engine - Fixed Canvas & Video Output</title>
+  <title>Grand El Hajj Studio Engine - Pro Dual Screen & Audio Graphic</title>
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -117,13 +117,13 @@
 <body>
 
   <header>
-    <div class="brand">GRAND EL HAJJ // STUDIO PRO v3.2</div>
+    <div class="brand">GRAND EL HAJJ // STUDIO PRO v3.5</div>
     <div style="display:flex; gap:6px;">
       <button class="btn-action btn-preset" onclick="savePreset()">💾 SIMPAN PRESET</button>
       <button class="btn-action btn-preset" onclick="loadPreset()">📂 MUAT PRESET</button>
-      <button class="btn-action btn-videtron" onclick="openOutputWindow()">📺 OUT VIDETRON</button>
+      <button class="btn-action btn-videtron" onclick="openOutputWindow()">📺 DUAL SCREEN (EXTEND VIDETRON)</button>
       <button class="btn-action btn-live" id="btnLiveControl" onclick="openLiveConfigModal()">🔴 LIVE YOUTUBE</button>
-      <button class="btn-action" onclick="toggleFullScreen()">🖥️ FULLSCREEN</button>
+      <button class="btn-action" onclick="toggleFullScreen()">🖥️ FULLSCREEN EDITOR</button>
     </div>
   </header>
 
@@ -140,6 +140,29 @@
       </div>
 
       <div class="control-panel">
+        <!-- MODUL 1: AUDIO VISUALIZER GRAPHIC -->
+        <div class="scale-group" style="border-color:#f59e0b;">
+          <div class="scale-header">
+            <span style="color:#f59e0b;">🎵 GRAFIK AUDIO VISUALIZER</span>
+            <button class="btn-ctrl" id="btnAudioPause" onclick="toggleAudioGraphicPause()" style="background:#f59e0b; color:#000; font-weight:bold;">⏸ PAUSE</button>
+          </div>
+          <div class="scale-row">
+            <label>Aktifkan:</label>
+            <input type="checkbox" id="chkAudioGraphic" checked onchange="audioGraphic.enabled = this.checked">
+            <span style="color:#f59e0b; font-weight:bold; margin-left: auto;" id="lblAudioStatus">ON</span>
+          </div>
+          <div class="scale-row">
+            <label>Tinggi H:</label>
+            <input type="range" id="audioH" min="10" max="250" value="80" oninput="updateAudioGraphicUI()">
+            <span class="val-badge" id="v_audioH">80px</span>
+          </div>
+          <div class="scale-row">
+            <label>Lebar W:</label>
+            <input type="range" id="audioW" min="20" max="100" value="90" oninput="updateAudioGraphicUI()">
+            <span class="val-badge" id="v_audioW">90%</span>
+          </div>
+        </div>
+
         <div class="section-title">
           <span>📐 LAYOUT & SKALA LAYAR</span>
           <button class="btn-reset-small" onclick="resetAllLayout()">Reset Semua</button>
@@ -329,6 +352,16 @@
     let outputWindow = null;
     let isFullCanvasMode = false;
 
+    // AUDIO GRAPHIC STATE
+    const audioGraphic = {
+      enabled: true,
+      paused: false,
+      height: 80,
+      widthPercent: 90,
+      bars: 32,
+      phase: 0
+    };
+
     const layout = {
       w: [100, 100, 100],
       h: [100, 100, 100],
@@ -366,6 +399,31 @@
           <span style="font-size:7px; color:#64748b; text-align:center;">(MP4/JPG/PDF/PPTX)</span>
         </div>
       `;
+    }
+
+    // UPDATE AUDIO GRAPHIC UI
+    function updateAudioGraphicUI() {
+      audioGraphic.height = parseInt(document.getElementById('audioH').value);
+      audioGraphic.widthPercent = parseInt(document.getElementById('audioW').value);
+      document.getElementById('v_audioH').innerText = `${audioGraphic.height}px`;
+      document.getElementById('v_audioW').innerText = `${audioGraphic.widthPercent}%`;
+    }
+
+    function toggleAudioGraphicPause() {
+      audioGraphic.paused = !audioGraphic.paused;
+      const btn = document.getElementById('btnAudioPause');
+      const lbl = document.getElementById('lblAudioStatus');
+      if (audioGraphic.paused) {
+        btn.innerText = '▶ PLAY';
+        btn.style.background = '#10b981';
+        lbl.innerText = 'PAUSED';
+        lbl.style.color = '#ef4444';
+      } else {
+        btn.innerText = '⏸ PAUSE';
+        btn.style.background = '#f59e0b';
+        lbl.innerText = 'ON';
+        lbl.style.color = '#f59e0b';
+      }
     }
 
     function toggleFullCanvasMode(enabled) {
@@ -415,10 +473,11 @@
     function savePreset() {
       const stateData = {
         layout: layout,
-        fullCanvas: isFullCanvasMode
+        fullCanvas: isFullCanvasMode,
+        audioGraphic: audioGraphic
       };
       localStorage.setItem('grand_el_hajj_preset', JSON.stringify(stateData));
-      alert("✅ Preset tata letak layar berhasil disimpan!");
+      alert("✅ Preset tata letak layar & Audio Graphic berhasil disimpan!");
     }
 
     function loadPreset() {
@@ -444,16 +503,17 @@
       }
     }
 
+    // CARA KERJA SISTEM EXTEND DUAL SCREEN VIDETRON
     function openOutputWindow() {
       if (outputWindow && !outputWindow.closed) {
         outputWindow.focus();
         return;
       }
 
-      outputWindow = window.open('', '_blank', 'width=1280,height=720,menubar=no,toolbar=no,location=no');
+      outputWindow = window.open('', 'VidetronOutput', 'width=1280,height=720,menubar=no,toolbar=no,location=no');
 
       if (!outputWindow) {
-        alert("Browser memblokir Pop-up. Harap izinkan Pop-up di samping kiri URL browser!");
+        alert("Browser memblokir Pop-up. Harap izinkan Pop-up untuk memutar ke layar Videtron (Extend)!");
         return;
       }
 
@@ -461,26 +521,19 @@
         <!DOCTYPE html>
         <html>
         <head>
-          <title>VIDETRON CLEAN OUTPUT</title>
+          <title>VIDETRON CLEAN FULL OUTPUT</title>
           <style>
             * { margin:0; padding:0; background:#000; overflow:hidden; }
             body, html { width:100vw; height:100vh; display:flex; justify-content:center; align-items:center; }
-            video { width:100vw; height:100vh; object-fit:cover; }
+            canvas { width:100vw; height:100vh; object-fit:contain; background:#000; }
           </style>
         </head>
         <body>
-          <video id="outVideo" autoplay playsinline muted></video>
+          <canvas id="videtronCanvas" width="1280" height="720"></canvas>
         </body>
         </html>
       `);
       outputWindow.document.close();
-
-      setTimeout(() => {
-        const videoEl = outputWindow.document.getElementById('outVideo');
-        const stream = canvas.captureStream(30);
-        videoEl.srcObject = stream;
-        videoEl.play().catch(e => console.log(e));
-      }, 500);
     }
 
     function toggleFullScreen() {
@@ -876,6 +929,43 @@
       }
     }
 
+    // ANIMASI GRAFIK AUDIO VISUALIZER
+    function drawAudioGraphic() {
+      if (!audioGraphic.enabled) return;
+
+      if (!audioGraphic.paused) {
+        audioGraphic.phase += 0.08;
+      }
+
+      const barCount = audioGraphic.bars;
+      const totalWidth = canvas.width * (audioGraphic.widthPercent / 100);
+      const startX = (canvas.width - totalWidth) / 2;
+      const startY = canvas.height - 15;
+      const barWidth = (totalWidth / barCount) - 3;
+
+      for (let i = 0; i < barCount; i++) {
+        let sampleHeight;
+        if (audioGraphic.paused) {
+          sampleHeight = (Math.sin(i * 0.4) * 0.5 + 0.5) * audioGraphic.height * 0.4 + 5;
+        } else {
+          sampleHeight = (Math.sin(i * 0.3 + audioGraphic.phase) * 0.5 + 0.5) * audioGraphic.height + Math.random() * (audioGraphic.height * 0.2);
+        }
+
+        const bx = startX + i * (barWidth + 3);
+        const by = startY - sampleHeight;
+
+        // Gradient Warna Audio Spectrum
+        const gradient = ctx.createLinearGradient(bx, startY, bx, by);
+        gradient.addColorStop(0, '#10b981');
+        gradient.addColorStop(0.6, '#f59e0b');
+        gradient.addColorStop(1, '#ef4444');
+
+        ctx.fillStyle = gradient;
+        ctx.fillRect(bx, by, barWidth, sampleHeight);
+      }
+    }
+
+    // LOOP MAIN CANVAS RENDERER
     function renderCanvasLoop() {
       ctx.fillStyle = '#000000';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -901,6 +991,19 @@
           const finalY = baseY + layout.y[i];
 
           drawMediaCover(media, finalX, finalY, targetW, targetH);
+        }
+      }
+
+      // Render Audio Spectrum Graphic di Atas Media
+      drawAudioGraphic();
+
+      // DUAL SCREEN SYNC: Salin isi kanvas utama secara real-time ke Layar Videtron jika terbuka
+      if (outputWindow && !outputWindow.closed) {
+        const videtronCanvas = outputWindow.document.getElementById('videtronCanvas');
+        if (videtronCanvas) {
+          const vCtx = videtronCanvas.getContext('2d');
+          vCtx.clearRect(0, 0, videtronCanvas.width, videtronCanvas.height);
+          vCtx.drawImage(canvas, 0, 0);
         }
       }
 
