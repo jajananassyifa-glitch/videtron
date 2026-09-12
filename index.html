@@ -904,41 +904,12 @@
       requestAnimationFrame(renderCanvasLoop);
     }
 
+    // FUNGSI SUDAH DIPERBAIKI (LAYAR DIRENSANGKAN FULL PENUH TANPA TERPOTONG)
     function drawMediaCover(media, x, y, width, height) {
-      // Mendapatkan dimensi aktual media
-      let srcW = media.videoWidth || media.naturalWidth || media.width;
-      let srcH = media.videoHeight || media.naturalHeight || media.height;
-
-      // Jika video belum menyajikan frame (srcW/srcH 0), paksa rendisi penuh tanpa kalkulasi crop
-      if (!srcW || !srcH) {
-        try {
-          ctx.drawImage(media, x, y, width, height);
-        } catch (e) {}
-        return;
-      }
-
-      const srcRatio = srcW / srcH;
-      const destRatio = width / height;
-
-      let drawW, drawH, drawX, drawY;
-
-      if (srcRatio > destRatio) {
-        drawH = srcH;
-        drawW = srcH * destRatio;
-        drawX = (srcW - drawW) / 2;
-        drawY = 0;
-      } else {
-        drawW = srcW;
-        drawH = srcW / destRatio;
-        drawX = 0;
-        drawY = (srcH - drawH) / 2;
-      }
-
       try {
-        ctx.drawImage(media, drawX, drawY, drawW, drawH, x, y, width, height);
-      } catch (e) {
-        // Fallback jika terjadi pembacaan frame prematur
         ctx.drawImage(media, x, y, width, height);
+      } catch (e) {
+        console.error("Gagal merefresh frame media:", e);
       }
     }
 
