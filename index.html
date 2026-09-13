@@ -335,6 +335,7 @@
     let outputWindow = null;
     let isFullCanvasMode = false;
     let masterAudioMuted = false;
+    let masterStream = null;
 
     const layout = {
       w: [100, 100, 100],
@@ -345,6 +346,8 @@
 
     function init() {
       initSlots();
+      // Mengaktifkan stream canvas 60 fps
+      masterStream = canvas.captureStream(60);
       requestAnimationFrame(renderCanvasLoop);
     }
 
@@ -355,7 +358,7 @@
           activeMedia[i].muted = masterAudioMuted;
         }
       }
-      alert(masterAudioMuted ? "🔇 Master Audio dimatekan (MUTE)." : "🔊 Master Audio diaktifkan.");
+      alert(masterAudioMuted ? "🔇 Master Audio dimatikan (MUTE)." : "🔊 Master Audio diaktifkan.");
     }
 
     function initSlots() {
@@ -458,7 +461,7 @@
       }
     }
 
-    /* JENDELA OUTPUT CLEAN VIDEOTRON TERPERBAIKI & BERJALAN */
+    /* KONEKSI PENUH DUAL DISPLAY / VIDEOTRON DENGAN FITUR UNLOCK AUTOPLAY */
     function openOutputWindow() {
       if (outputWindow && !outputWindow.closed) {
         outputWindow.focus();
@@ -484,15 +487,15 @@
             video { width:100vw; height:100vh; object-fit:fill !important; display:block; border:none; outline:none; }
             .start-overlay {
               position: absolute; top:0; left:0; width:100vw; height:100vh;
-              background: rgba(0,0,0,0.9); display:flex; flex-direction:column;
+              background: rgba(0,0,0,0.92); display:flex; flex-direction:column;
               justify-content:center; align-items:center; z-index:100; color:#fff; font-family:sans-serif;
             }
             .start-btn {
-              background: #10b981; color: #fff; border: none; padding: 16px 32px;
-              font-size: 18px; font-weight: bold; border-radius: 8px; cursor: pointer; margin-top: 15px;
-              box-shadow: 0 0 15px rgba(16,185,129,0.5);
+              background: #10b981; color: #fff; border: none; padding: 18px 36px;
+              font-size: 20px; font-weight: bold; border-radius: 8px; cursor: pointer; margin-top: 20px;
+              box-shadow: 0 0 20px rgba(16,185,129,0.6); transition: transform 0.2s;
             }
-            .start-btn:hover { background: #059669; }
+            .start-btn:hover { background: #059669; transform: scale(1.05); }
             .hint {
               position: absolute; top:12px; left:12px; background:rgba(0,0,0,0.85);
               color:#10b981; padding:8px 14px; font-family:sans-serif; font-size:12px;
@@ -502,12 +505,12 @@
         </head>
         <body>
           <div class="start-overlay" id="startOverlay">
-            <h2>OUTPUT VIDETRON READY</h2>
-            <p style="color:#94a3b8; font-size:13px; margin-top:5px;">Klik tombol di bawah untuk mengaktifkan video & audio ke Videotron</p>
+            <h2 style="letter-spacing:1px; color:#38bdf8;">📺 SYSTEM OUTPUT VIDETRON READY</h2>
+            <p style="color:#94a3b8; font-size:14px; margin-top:8px;">Klik tombol di bawah ini untuk memulai jalannya animasi video & audio ke Videotron:</p>
             <button class="start-btn" onclick="startOutput()">▶ MULAI OUTPUT & AKTIFKAN SUARA</button>
           </div>
-          <div class="hint" id="hintBox">Tarik jendela ini ke Layar Videtron, lalu Tekan 'F' / Double Click untuk Fullscreen</div>
-          <video id="outVideo" autoplay playsinline></video>
+          <div class="hint" id="hintBox">Tarik jendela ini ke Layar Videotron, lalu Tekan 'F' / Double Click untuk Fullscreen</div>
+          <video id="outVideo" autoplay playsinline muted></video>
           <script>
             const vid = document.getElementById('outVideo');
             const hint = document.getElementById('hintBox');
@@ -515,7 +518,14 @@
             
             function startOutput() {
               overlay.style.display = 'none';
-              vid.play().catch(e => console.log(e));
+              vid.muted = false;
+              vid.play().then(() => {
+                console.log("VIDETRON PLAYING LIVE");
+              }).catch(e => {
+                console.log("Retry play", e);
+                vid.muted = true;
+                vid.play();
+              });
               setTimeout(() => { if(hint) hint.style.opacity = '0'; }, 4000);
             }
 
@@ -537,15 +547,15 @@
       `);
       outputWindow.document.close();
 
-      setTimeout(() => { syncStreamToVideotron(); }, 400);
+      setTimeout(() => { syncStreamToVideotron(); }, 500);
     }
 
     function syncStreamToVideotron() {
       if (!outputWindow || outputWindow.closed) return;
       const videoEl = outputWindow.document.getElementById('outVideo');
       if (videoEl) {
-        const stream = canvas.captureStream(60);
-        videoEl.srcObject = stream;
+        if (!masterStream) masterStream = canvas.captureStream(60);
+        videoEl.srcObject = masterStream;
         videoEl.play().catch(e => console.log(e));
       }
     }
