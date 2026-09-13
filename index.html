@@ -125,7 +125,7 @@
 <body>
 
   <header>
-    <div class="brand">GRAND EL HAJJ // STUDIO PRO v3.4</div>
+    <div class="brand">GRAND EL HAJJ // STUDIO PRO v3.5</div>
     <div style="display:flex; gap:6px;">
       <button class="btn-action btn-preset" onclick="audioSetting()">🔊 AUDIO SETTING</button>
       <button class="btn-action btn-preset" onclick="savePreset()">💾 SIMPAN PRESET</button>
@@ -333,9 +333,9 @@
     let mediaRecorder = null;
     let socket = null;
     let outputWindow = null;
+    let outCtx = null;
     let isFullCanvasMode = false;
     let masterAudioMuted = false;
-    let masterStream = null;
 
     const layout = {
       w: [100, 100, 100],
@@ -346,8 +346,6 @@
 
     function init() {
       initSlots();
-      // Mengaktifkan stream canvas 60 fps
-      masterStream = canvas.captureStream(60);
       requestAnimationFrame(renderCanvasLoop);
     }
 
@@ -461,11 +459,10 @@
       }
     }
 
-    /* KONEKSI PENUH DUAL DISPLAY / VIDEOTRON DENGAN FITUR UNLOCK AUTOPLAY */
+    /* KONEKSI PENUH DUAL DISPLAY / VIDETRON BERBASIS DIRECT CANVAS COPY */
     function openOutputWindow() {
       if (outputWindow && !outputWindow.closed) {
         outputWindow.focus();
-        syncStreamToVideotron();
         return;
       }
 
@@ -483,19 +480,8 @@
           <title>VIDETRON CLEAN OUTPUT</title>
           <style>
             * { margin:0; padding:0; background:#000; overflow:hidden; }
-            html, body { width:100vw; height:100vh; display:flex; justify-content:center; align-items:center; background:#000; position:relative; }
-            video { width:100vw; height:100vh; object-fit:fill !important; display:block; border:none; outline:none; }
-            .start-overlay {
-              position: absolute; top:0; left:0; width:100vw; height:100vh;
-              background: rgba(0,0,0,0.92); display:flex; flex-direction:column;
-              justify-content:center; align-items:center; z-index:100; color:#fff; font-family:sans-serif;
-            }
-            .start-btn {
-              background: #10b981; color: #fff; border: none; padding: 18px 36px;
-              font-size: 20px; font-weight: bold; border-radius: 8px; cursor: pointer; margin-top: 20px;
-              box-shadow: 0 0 20px rgba(16,185,129,0.6); transition: transform 0.2s;
-            }
-            .start-btn:hover { background: #059669; transform: scale(1.05); }
+            html, body { width:100vw; height:100vh; display:flex; justify-content:center; align-items:center; background:#000; }
+            canvas { width:100vw; height:100vh; object-fit:fill !important; display:block; }
             .hint {
               position: absolute; top:12px; left:12px; background:rgba(0,0,0,0.85);
               color:#10b981; padding:8px 14px; font-family:sans-serif; font-size:12px;
@@ -504,30 +490,11 @@
           </style>
         </head>
         <body>
-          <div class="start-overlay" id="startOverlay">
-            <h2 style="letter-spacing:1px; color:#38bdf8;">📺 SYSTEM OUTPUT VIDETRON READY</h2>
-            <p style="color:#94a3b8; font-size:14px; margin-top:8px;">Klik tombol di bawah ini untuk memulai jalannya animasi video & audio ke Videotron:</p>
-            <button class="start-btn" onclick="startOutput()">▶ MULAI OUTPUT & AKTIFKAN SUARA</button>
-          </div>
           <div class="hint" id="hintBox">Tarik jendela ini ke Layar Videotron, lalu Tekan 'F' / Double Click untuk Fullscreen</div>
-          <video id="outVideo" autoplay playsinline muted></video>
+          <canvas id="outCanvas" width="1920" height="1080"></canvas>
           <script>
-            const vid = document.getElementById('outVideo');
             const hint = document.getElementById('hintBox');
-            const overlay = document.getElementById('startOverlay');
-            
-            function startOutput() {
-              overlay.style.display = 'none';
-              vid.muted = false;
-              vid.play().then(() => {
-                console.log("VIDETRON PLAYING LIVE");
-              }).catch(e => {
-                console.log("Retry play", e);
-                vid.muted = true;
-                vid.play();
-              });
-              setTimeout(() => { if(hint) hint.style.opacity = '0'; }, 4000);
-            }
+            setTimeout(() => { if(hint) hint.style.opacity = '0'; }, 4000);
 
             function goFullscreen() {
               if (!document.fullscreenElement) {
@@ -537,7 +504,7 @@
               }
             }
 
-            vid.addEventListener('dblclick', goFullscreen);
+            document.addEventListener('dblclick', goFullscreen);
             window.addEventListener('keydown', (e) => {
               if (e.key === 'f' || e.key === 'F') goFullscreen();
             });
@@ -547,17 +514,12 @@
       `);
       outputWindow.document.close();
 
-      setTimeout(() => { syncStreamToVideotron(); }, 500);
-    }
-
-    function syncStreamToVideotron() {
-      if (!outputWindow || outputWindow.closed) return;
-      const videoEl = outputWindow.document.getElementById('outVideo');
-      if (videoEl) {
-        if (!masterStream) masterStream = canvas.captureStream(60);
-        videoEl.srcObject = masterStream;
-        videoEl.play().catch(e => console.log(e));
-      }
+      setTimeout(() => {
+        const outCanvas = outputWindow.document.getElementById('outCanvas');
+        if (outCanvas) {
+          outCtx = outCanvas.getContext('2d');
+        }
+      }, 300);
     }
 
     function toggleFullScreen() {
@@ -663,7 +625,6 @@
         video.src = fileUrl;
         video.loop = true;
         video.playsInline = true;
-        video.crossOrigin = 'anonymous';
 
         video.onloadeddata = () => {
           slotData[key] = { media: video, isVideo: true, isCam: false, url: fileUrl, typeName: 'VIDEO' };
@@ -972,6 +933,13 @@
 
           drawMediaStretch(media, finalX, finalY, targetW, targetH);
         }
+      }
+
+      // SINKRONISASI LANGSUNG KE JENDELA VIDETRON
+      if (outputWindow && !outputWindow.closed && outCtx) {
+        try {
+          outCtx.drawImage(canvas, 0, 0, 1920, 1080);
+        } catch (e) {}
       }
 
       requestAnimationFrame(renderCanvasLoop);
