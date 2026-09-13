@@ -3,22 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Grand El Hajj Studio Engine - Full Canvas Videtron Fix</title>
+  <title>Grand El Hajj Studio Engine - Dual Display Videotron</title>
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-    body {
+    html, body {
+      width: 100%; height: 100%; background-color: #0f1115; color: #d1d5db;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      height: 100vh; background-color: #0f1115; color: #d1d5db;
       display: flex; flex-direction: column; overflow: hidden; font-size: 11px;
     }
 
     header {
       height: 42px; background: #161920; border-bottom: 1px solid #262b36;
       display: flex; align-items: center; justify-content: space-between; padding: 0 12px;
+      flex-shrink: 0;
     }
     .brand { font-weight: 800; font-size: 13px; color: #10b981; letter-spacing: 1.5px; }
     
@@ -31,16 +32,23 @@
     .btn-preset { background: #8b5cf6; color: #fff; border: 1px solid #a78bfa; font-weight: 600; }
     .btn-preset:hover { background: #7c3aed; }
 
-    .workspace { display: flex; flex-direction: column; flex: 1; height: calc(100vh - 42px); }
+    .workspace { display: flex; flex-direction: column; flex: 1; height: calc(100vh - 42px); overflow: hidden; }
 
-    .top-section { display: flex; height: 52%; background: #0b0c10; border-bottom: 1px solid #262b36; }
-    .canvas-box { flex: 1; background: #000; display: flex; flex-direction: column; position: relative; }
-    .canvas-header { background: #161920; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #262b36; }
-    .canvas-container { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; background: #000; }
+    .top-section { display: flex; height: 55%; background: #0b0c10; border-bottom: 1px solid #262b36; }
+    .canvas-box { flex: 1; background: #000; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+    .canvas-header { background: #161920; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #262b36; flex-shrink: 0; }
     
-    canvas { width: 100%; height: 100%; object-fit: contain; background: #000; }
+    .canvas-container {
+      flex: 1; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden; background: #000;
+    }
+    
+    canvas {
+      position: absolute; top: 0; left: 0; width: 100% !important; height: 100% !important;
+      object-fit: fill; background: #000;
+    }
 
-    .control-panel { width: 340px; background: #161920; border-left: 1px solid #262b36; padding: 8px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
+    .control-panel { width: 330px; background: #161920; border-left: 1px solid #262b36; padding: 8px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; flex-shrink: 0; }
     .section-title { font-weight: 700; color: #10b981; border-bottom: 1px solid #262b36; padding-bottom: 4px; font-size: 11px; margin-top: 2px; display: flex; justify-content: space-between; align-items: center; }
     
     .scale-group { display: flex; flex-direction: column; gap: 4px; background: #111318; padding: 6px 8px; border-radius: 4px; border: 1px solid #262b36; }
@@ -49,26 +57,21 @@
     .btn-reset-small:hover { background: #ef4444; color: #fff; }
 
     .scale-row { display: flex; align-items: center; gap: 6px; }
-    .scale-row label { width: 70px; font-size: 10px; color: #94a3b8; }
+    .scale-row label { width: 65px; font-size: 10px; color: #94a3b8; }
     .scale-row input[type=range] { flex: 1; height: 4px; border-radius: 2px; accent-color: #10b981; cursor: pointer; }
     .val-badge { width: 42px; text-align: right; font-family: monospace; font-size: 10px; color: #38bdf8; font-weight: bold; }
 
-    .mixer-panel { background: #0d1520; border: 1px solid #1e3a8a; border-radius: 4px; padding: 6px; display: flex; flex-direction: column; gap: 6px; }
-    .vu-meter-box { display: flex; align-items: flex-end; height: 35px; background: #050b14; border: 1px solid #1e293b; border-radius: 4px; padding: 4px; gap: 2px; }
-    .vu-bar { flex: 1; background: #1e293b; border-radius: 1px; height: 3px; transition: height 0.04s linear, background-color 0.1s; }
-
-    .full-mode-box { background: #064e3b; border: 1px solid #10b981; padding: 6px; border-radius: 4px; margin-top: 4px; display: flex; flex-direction: column; gap: 6px; }
-    .full-mode-row { display: flex; align-items: center; justify-content: space-between; }
+    .full-mode-box { background: #064e3b; border: 1px solid #10b981; padding: 6px; border-radius: 4px; margin-top: 4px; display: flex; align-items: center; justify-content: space-between; }
     .full-mode-box label { font-weight: bold; color: #a7f3d0; cursor: pointer; }
 
     .bottom-section { display: flex; flex: 1; background: #0f1115; overflow: hidden; }
     .matrix-section { flex: 1; display: flex; overflow: hidden; }
     .layers-stack { flex: 1; display: flex; flex-direction: column; padding: 8px; gap: 8px; overflow-y: auto; }
     .layer-row { display: flex; height: 115px; background: #161920; border: 1px solid #262b36; border-radius: 4px; }
-    .layer-head { width: 120px; background: #1a1e26; padding: 8px; border-right: 1px solid #262b36; display: flex; flex-direction: column; justify-content: center; }
+    .layer-head { width: 120px; background: #1a1e26; padding: 8px; border-right: 1px solid #262b36; display: flex; flex-direction: column; justify-content: center; flex-shrink: 0; }
     .clips-container { flex: 1; display: flex; gap: 8px; padding: 8px; overflow-x: auto; align-items: center; }
 
-    .youtube-panel { width: 320px; background: #111318; border-left: 1px solid #262b36; display: flex; flex-direction: column; }
+    .youtube-panel { width: 320px; background: #111318; border-left: 1px solid #262b36; display: flex; flex-direction: column; flex-shrink: 0; }
     .youtube-header { background: #161920; padding: 6px 12px; font-weight: bold; color: #ef4444; border-bottom: 1px solid #262b36; display: flex; justify-content: space-between; align-items: center; }
     .youtube-frame-container { flex: 1; background: #000; position: relative; }
     .youtube-frame-container iframe { width: 100%; height: 100%; border: none; }
@@ -122,13 +125,14 @@
 <body>
 
   <header>
-    <div class="brand">GRAND EL HAJJ // STUDIO PRO v5.3</div>
+    <div class="brand">GRAND EL HAJJ // STUDIO PRO v3.4</div>
     <div style="display:flex; gap:6px;">
+      <button class="btn-action btn-preset" onclick="audioSetting()">🔊 AUDIO SETTING</button>
       <button class="btn-action btn-preset" onclick="savePreset()">💾 SIMPAN PRESET</button>
       <button class="btn-action btn-preset" onclick="loadPreset()">📂 MUAT PRESET</button>
-      <button class="btn-action btn-videtron" onclick="openOutputWindow()">📺 DUAL SCREEN (EXTEND VIDETRON)</button>
+      <button class="btn-action btn-videtron" onclick="openOutputWindow()">📺 OUT VIDETRON (EXTEND)</button>
       <button class="btn-action btn-live" id="btnLiveControl" onclick="openLiveConfigModal()">🔴 LIVE YOUTUBE</button>
-      <button class="btn-action" onclick="toggleFullScreen()">🖥️ FULLSCREEN EDITOR</button>
+      <button class="btn-action" onclick="toggleFullScreen()">🖥️ FULLSCREEN STUDIO</button>
     </div>
   </header>
 
@@ -136,36 +140,20 @@
     <div class="top-section">
       <div class="canvas-box">
         <div class="canvas-header">
-          <span style="font-weight:700; color:#38bdf8;">PROGRAM OUTPUT PREVIEW (CLEAN)</span>
-          <span style="color:#94a3b8; font-size:10px;">MASTER CANVAS: 1280x720 (FULL HD 16:9)</span>
+          <span style="font-weight:700; color:#38bdf8;">PROGRAM OUTPUT PREVIEW (LAPTOP)</span>
+          <span style="color:#94a3b8; font-size:10px;">MASTER CANVAS: 1920x1080</span>
         </div>
         <div class="canvas-container" id="canvasContainer">
-          <canvas id="masterCanvas" width="1280" height="720"></canvas>
+          <canvas id="masterCanvas" width="1920" height="1080"></canvas>
         </div>
       </div>
 
       <div class="control-panel">
-        <div class="mixer-panel">
-          <div class="scale-header">
-            <span style="color:#60a5fa;">🎛️ AUDIO MIXER & REAL-TIME MONITOR</span>
-            <button class="btn-ctrl" id="btnMuteMaster" onclick="toggleMasterMute()" style="background:#ef4444;">🔊 MUTE</button>
-          </div>
-          
-          <div class="vu-meter-box" id="vuMeterContainer"></div>
-
-          <div class="scale-row">
-            <label>Master Vol:</label>
-            <input type="range" id="masterVolume" min="0" max="100" value="100" oninput="setMasterVolume(this.value)">
-            <span class="val-badge" id="v_masterVol">100%</span>
-          </div>
-        </div>
-
         <div class="section-title">
           <span>📐 LAYOUT & SKALA LAYAR</span>
           <button class="btn-reset-small" onclick="resetAllLayout()">Reset Semua</button>
         </div>
 
-        <!-- LAYAR 3: KANAN -->
         <div class="scale-group">
           <div class="scale-header">
             <span style="color:#38bdf8;">1. Layar Kanan (Index 2)</span>
@@ -183,17 +171,16 @@
           </div>
           <div class="scale-row">
             <label>Posisi X:</label>
-            <input type="range" id="x2" min="-100" max="100" value="0" oninput="updateLayoutUI(2)">
+            <input type="range" id="x2" min="-500" max="500" value="0" oninput="updateLayoutUI(2)">
             <span class="val-badge" id="v_x2">0</span>
           </div>
           <div class="scale-row">
             <label>Posisi Y:</label>
-            <input type="range" id="y2" min="-100" max="100" value="0" oninput="updateLayoutUI(2)">
+            <input type="range" id="y2" min="-500" max="500" value="0" oninput="updateLayoutUI(2)">
             <span class="val-badge" id="v_y2">0</span>
           </div>
         </div>
 
-        <!-- LAYAR 2: TENGAH DENGAN FITUR FULL CANVAS -->
         <div class="scale-group">
           <div class="scale-header">
             <span style="color:#10b981;">2. Layar Tengah (Index 1)</span>
@@ -201,17 +188,8 @@
           </div>
 
           <div class="full-mode-box">
-            <div class="full-mode-row">
-              <label for="chkFullCanvas">🖥️ FULL CANVAS MODE</label>
-              <input type="checkbox" id="chkFullCanvas" onchange="toggleFullCanvasMode(this.checked)">
-            </div>
-            <div class="full-mode-row">
-              <span style="color:#93c5fd; font-size:10px;">Mode Fit Video:</span>
-              <select id="fitModeSelect" style="background:#0f1115; color:#fff; border:1px solid #334155; font-size:10px; border-radius:3px; padding:2px 4px;">
-                <option value="cover" selected>Zoom & Crop (Cover)</option>
-                <option value="stretch">Paksa Penuh (Stretch Full)</option>
-              </select>
-            </div>
+            <label for="chkFullCanvas">🖥️ FULL CANVAS (COVER ALL)</label>
+            <input type="checkbox" id="chkFullCanvas" onchange="toggleFullCanvasMode(this.checked)">
           </div>
 
           <div id="controlsLayer1">
@@ -227,18 +205,17 @@
             </div>
             <div class="scale-row">
               <label>Posisi X:</label>
-              <input type="range" id="x1" min="-100" max="100" value="0" oninput="updateLayoutUI(1)">
+              <input type="range" id="x1" min="-500" max="500" value="0" oninput="updateLayoutUI(1)">
               <span class="val-badge" id="v_x1">0</span>
             </div>
             <div class="scale-row">
               <label>Posisi Y:</label>
-              <input type="range" id="y1" min="-100" max="100" value="0" oninput="updateLayoutUI(1)">
+              <input type="range" id="y1" min="-500" max="500" value="0" oninput="updateLayoutUI(1)">
               <span class="val-badge" id="v_y1">0</span>
             </div>
           </div>
         </div>
 
-        <!-- LAYAR 1: KIRI -->
         <div class="scale-group">
           <div class="scale-header">
             <span style="color:#f59e0b;">3. Layar Kiri (Index 0)</span>
@@ -256,12 +233,12 @@
           </div>
           <div class="scale-row">
             <label>Posisi X:</label>
-            <input type="range" id="x0" min="-100" max="100" value="0" oninput="updateLayoutUI(0)">
+            <input type="range" id="x0" min="-500" max="500" value="0" oninput="updateLayoutUI(0)">
             <span class="val-badge" id="v_x0">0</span>
           </div>
           <div class="scale-row">
             <label>Posisi Y:</label>
-            <input type="range" id="y0" min="-100" max="100" value="0" oninput="updateLayoutUI(0)">
+            <input type="range" id="y0" min="-500" max="500" value="0" oninput="updateLayoutUI(0)">
             <span class="val-badge" id="v_y0">0</span>
           </div>
         </div>
@@ -346,7 +323,7 @@
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
     const canvas = document.getElementById('masterCanvas');
-    const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
+    const ctx = canvas.getContext('2d');
 
     const activeMedia = [null, null, null]; 
     const slotData = {}; 
@@ -356,16 +333,8 @@
     let mediaRecorder = null;
     let socket = null;
     let outputWindow = null;
-    let outputCanvas = null;
-    let outputCtx = null;
     let isFullCanvasMode = false;
-
-    // AUDIO MIXER
-    let audioCtx = null;
-    let gainNode = null;
-    let analyser = null;
-    let dataArray = null;
-    let masterMuted = false;
+    let masterAudioMuted = false;
 
     const layout = {
       w: [100, 100, 100],
@@ -376,91 +345,17 @@
 
     function init() {
       initSlots();
-      createVuBars();
       requestAnimationFrame(renderCanvasLoop);
     }
 
-    function createVuBars() {
-      const container = document.getElementById('vuMeterContainer');
-      container.innerHTML = '';
-      for (let i = 0; i < 28; i++) {
-        const bar = document.createElement('div');
-        bar.className = 'vu-bar';
-        container.appendChild(bar);
-      }
-    }
-
-    function initAudioMixerEngine(mediaElement) {
-      try {
-        if (!audioCtx) {
-          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-          gainNode = audioCtx.createGain();
-          analyser = audioCtx.createAnalyser();
-          analyser.fftSize = 64;
-
-          gainNode.connect(analyser);
-          analyser.connect(audioCtx.destination);
-          dataArray = new Uint8Array(analyser.frequencyBinCount);
+    function audioSetting() {
+      masterAudioMuted = !masterAudioMuted;
+      for (let i = 0; i < 3; i++) {
+        if (activeMedia[i] && activeMedia[i].tagName === 'VIDEO') {
+          activeMedia[i].muted = masterAudioMuted;
         }
-
-        if (audioCtx.state === 'suspended') {
-          audioCtx.resume();
-        }
-
-        if (mediaElement instanceof HTMLVideoElement || mediaElement instanceof HTMLAudioElement) {
-          if (!mediaElement._audioSourceConnected) {
-            const source = audioCtx.createMediaElementSource(mediaElement);
-            source.connect(gainNode);
-            mediaElement._audioSourceConnected = true;
-          }
-        }
-      } catch (e) {
-        console.warn("Audio Mixer Engine Warning:", e);
       }
-    }
-
-    function setMasterVolume(val) {
-      const volume = val / 100;
-      document.getElementById('v_masterVol').innerText = `${val}%`;
-      if (gainNode) {
-        gainNode.gain.value = masterMuted ? 0 : volume;
-      }
-    }
-
-    function toggleMasterMute() {
-      masterMuted = !masterMuted;
-      const btn = document.getElementById('btnMuteMaster');
-      if (masterMuted) {
-        btn.innerText = '🔇 UNMUTE';
-        btn.style.background = '#334155';
-        if (gainNode) gainNode.gain.value = 0;
-      } else {
-        btn.innerText = '🔊 MUTE';
-        btn.style.background = '#ef4444';
-        const val = parseInt(document.getElementById('masterVolume').value);
-        if (gainNode) gainNode.gain.value = val / 100;
-      }
-    }
-
-    function updateVuMeter() {
-      const bars = document.querySelectorAll('.vu-bar');
-      if (analyser && dataArray && !masterMuted) {
-        analyser.getByteFrequencyData(dataArray);
-        for (let i = 0; i < bars.length; i++) {
-          const val = dataArray[i] || 0;
-          const h = (val / 255) * 27;
-          bars[i].style.height = `${Math.max(3, h)}px`;
-
-          if (val > 210) bars[i].style.backgroundColor = '#ef4444';
-          else if (val > 130) bars[i].style.backgroundColor = '#f59e0b';
-          else bars[i].style.backgroundColor = '#38bdf8';
-        }
-      } else {
-        bars.forEach(b => {
-          b.style.height = '3px';
-          b.style.backgroundColor = '#1e293b';
-        });
-      }
+      alert(masterAudioMuted ? "🔇 Master Audio dimatekan (MUTE)." : "🔊 Master Audio diaktifkan.");
     }
 
     function initSlots() {
@@ -535,10 +430,7 @@
     }
 
     function savePreset() {
-      const stateData = {
-        layout: layout,
-        fullCanvas: isFullCanvasMode
-      };
+      const stateData = { layout: layout, fullCanvas: isFullCanvasMode };
       localStorage.setItem('grand_el_hajj_preset', JSON.stringify(stateData));
       alert("✅ Preset tata letak layar berhasil disimpan!");
     }
@@ -566,16 +458,18 @@
       }
     }
 
+    /* JENDELA OUTPUT CLEAN VIDEOTRON TERPERBAIKI & BERJALAN */
     function openOutputWindow() {
       if (outputWindow && !outputWindow.closed) {
         outputWindow.focus();
+        syncStreamToVideotron();
         return;
       }
 
-      outputWindow = window.open('', 'VidetronOutput', 'width=1280,height=720,menubar=no,toolbar=no,location=no');
+      outputWindow = window.open('', 'VidetronCleanOutput', 'width=1920,height=1080,menubar=no,toolbar=no,location=no,status=no,scrollbars=no,resizable=yes');
 
       if (!outputWindow) {
-        alert("Browser memblokir Pop-up. Harap izinkan Pop-up untuk memutar ke layar Videtron (Extend)!");
+        alert("Browser memblokir Pop-up! Harap izinkan Pop-up untuk membuka Output Videotron.");
         return;
       }
 
@@ -583,23 +477,76 @@
         <!DOCTYPE html>
         <html>
         <head>
-          <title>VIDETRON CLEAN FULL OUTPUT</title>
+          <title>VIDETRON CLEAN OUTPUT</title>
           <style>
             * { margin:0; padding:0; background:#000; overflow:hidden; }
-            body, html { width:100vw; height:100vh; display:flex; justify-content:center; align-items:center; }
-            canvas { width:100vw; height:100vh; object-fit:contain; background:#000; }
+            html, body { width:100vw; height:100vh; display:flex; justify-content:center; align-items:center; background:#000; position:relative; }
+            video { width:100vw; height:100vh; object-fit:fill !important; display:block; border:none; outline:none; }
+            .start-overlay {
+              position: absolute; top:0; left:0; width:100vw; height:100vh;
+              background: rgba(0,0,0,0.9); display:flex; flex-direction:column;
+              justify-content:center; align-items:center; z-index:100; color:#fff; font-family:sans-serif;
+            }
+            .start-btn {
+              background: #10b981; color: #fff; border: none; padding: 16px 32px;
+              font-size: 18px; font-weight: bold; border-radius: 8px; cursor: pointer; margin-top: 15px;
+              box-shadow: 0 0 15px rgba(16,185,129,0.5);
+            }
+            .start-btn:hover { background: #059669; }
+            .hint {
+              position: absolute; top:12px; left:12px; background:rgba(0,0,0,0.85);
+              color:#10b981; padding:8px 14px; font-family:sans-serif; font-size:12px;
+              border-radius:4px; pointer-events:none; transition:opacity 1s; z-index:10; border:1px solid #10b981;
+            }
           </style>
         </head>
         <body>
-          <canvas id="videtronCanvas" width="1280" height="720"></canvas>
+          <div class="start-overlay" id="startOverlay">
+            <h2>OUTPUT VIDETRON READY</h2>
+            <p style="color:#94a3b8; font-size:13px; margin-top:5px;">Klik tombol di bawah untuk mengaktifkan video & audio ke Videotron</p>
+            <button class="start-btn" onclick="startOutput()">▶ MULAI OUTPUT & AKTIFKAN SUARA</button>
+          </div>
+          <div class="hint" id="hintBox">Tarik jendela ini ke Layar Videtron, lalu Tekan 'F' / Double Click untuk Fullscreen</div>
+          <video id="outVideo" autoplay playsinline></video>
+          <script>
+            const vid = document.getElementById('outVideo');
+            const hint = document.getElementById('hintBox');
+            const overlay = document.getElementById('startOverlay');
+            
+            function startOutput() {
+              overlay.style.display = 'none';
+              vid.play().catch(e => console.log(e));
+              setTimeout(() => { if(hint) hint.style.opacity = '0'; }, 4000);
+            }
+
+            function goFullscreen() {
+              if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => console.log(err));
+              } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+              }
+            }
+
+            vid.addEventListener('dblclick', goFullscreen);
+            window.addEventListener('keydown', (e) => {
+              if (e.key === 'f' || e.key === 'F') goFullscreen();
+            });
+          <\/script>
         </body>
         </html>
       `);
       outputWindow.document.close();
 
-      outputCanvas = outputWindow.document.getElementById('videtronCanvas');
-      if (outputCanvas) {
-        outputCtx = outputCanvas.getContext('2d', { alpha: false });
+      setTimeout(() => { syncStreamToVideotron(); }, 400);
+    }
+
+    function syncStreamToVideotron() {
+      if (!outputWindow || outputWindow.closed) return;
+      const videoEl = outputWindow.document.getElementById('outVideo');
+      if (videoEl) {
+        const stream = canvas.captureStream(60);
+        videoEl.srcObject = stream;
+        videoEl.play().catch(e => console.log(e));
       }
     }
 
@@ -646,7 +593,7 @@
           const stream = canvas.captureStream(30);
           mediaRecorder = new MediaRecorder(stream, {
             mimeType: 'video/webm;codecs=h264',
-            videoBitsPerSecond: 3000000
+            videoBitsPerSecond: 4000000
           });
 
           mediaRecorder.ondataavailable = (e) => {
@@ -682,10 +629,7 @@
     }
 
     function triggerFileUpload(key, event) {
-      if (event) {
-        event.stopPropagation();
-        event.preventDefault();
-      }
+      if(event) event.stopPropagation();
       targetUploadKey = key;
       const uploader = document.getElementById('fileUploader');
       uploader.value = '';
@@ -694,9 +638,9 @@
 
     async function onFileSelected(e) {
       const file = e.target.files[0];
-      const key = targetUploadKey;
-      if (!file || !key) return;
+      if (!file || !targetUploadKey) return;
 
+      const key = targetUploadKey;
       const ext = file.name.split('.').pop().toLowerCase();
 
       if (ext === 'pdf') {
@@ -709,18 +653,15 @@
         video.src = fileUrl;
         video.loop = true;
         video.playsInline = true;
-        video.muted = true; // Paksa Mute awal agar auto-play tidak diblokir browser
         video.crossOrigin = 'anonymous';
 
         video.onloadeddata = () => {
-          video.play().catch(console.error);
           slotData[key] = { media: video, isVideo: true, isCam: false, url: fileUrl, typeName: 'VIDEO' };
           renderSlotUI(key);
         };
       } else {
         const fileUrl = URL.createObjectURL(file);
         const img = new Image();
-        img.crossOrigin = 'anonymous';
         img.src = fileUrl;
         img.onload = () => {
           slotData[key] = { media: img, isVideo: false, isCam: false, url: fileUrl, typeName: 'GAMBAR' };
@@ -737,7 +678,7 @@
 
         for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
           const page = await pdf.getPage(pageNum);
-          const viewport = page.getViewport({ scale: 1.5 });
+          const viewport = page.getViewport({ scale: 2.0 });
           const tempCanvas = document.createElement('canvas');
           const tempCtx = tempCanvas.getContext('2d');
           tempCanvas.width = viewport.width;
@@ -859,7 +800,7 @@
 
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { deviceId: { exact: deviceId } },
+          video: { deviceId: { exact: deviceId }, width: { ideal: 1920 }, height: { ideal: 1080 } },
           audio: true
         });
 
@@ -892,12 +833,10 @@
         activeMedia[layer] = item.media;
         
         if (item.isVideo) {
-          item.media.muted = false;
-          item.media.currentTime = 0;
-          initAudioMixerEngine(item.media);
+          item.media.muted = masterAudioMuted;
           const playPromise = item.media.play();
           if (playPromise !== undefined) {
-            playPromise.catch(() => {
+            playPromise.catch(err => {
               item.media.muted = true;
               item.media.play();
             });
@@ -942,8 +881,7 @@
       } else if (item.isVideo) {
         elementTag = `<video src="${item.url}" class="slot-preview" muted loop autoplay></video>`;
       } else {
-        const imgSrc = item.url || (item.media ? item.media.src : '');
-        elementTag = `<img src="${imgSrc}" class="slot-preview" />`;
+        elementTag = `<img src="${item.media.src || item.url}" class="slot-preview" />`;
       }
 
       let labelText = item.typeName || 'MEDIA';
@@ -1005,7 +943,7 @@
       const sectionWidth = canvas.width / 3;
 
       if (isFullCanvasMode && activeMedia[1]) {
-        drawMediaCover(activeMedia[1], 0, 0, canvas.width, canvas.height);
+        drawMediaStretch(activeMedia[1], 0, 0, canvas.width, canvas.height);
       } else {
         for (let i = 0; i < 3; i++) {
           const media = activeMedia[i];
@@ -1022,74 +960,17 @@
           const finalX = baseX + layout.x[i];
           const finalY = baseY + layout.y[i];
 
-          drawMediaCover(media, finalX, finalY, targetW, targetH);
-        }
-      }
-
-      updateVuMeter();
-
-      if (outputWindow && !outputWindow.closed) {
-        if (!outputCtx) {
-          outputCanvas = outputWindow.document.getElementById('videtronCanvas');
-          if (outputCanvas) {
-            outputCtx = outputCanvas.getContext('2d', { alpha: false });
-          }
-        }
-
-        if (outputCtx && outputCanvas) {
-          outputCtx.fillStyle = '#000000';
-          outputCtx.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
-          outputCtx.drawImage(canvas, 0, 0, outputCanvas.width, outputCanvas.height);
+          drawMediaStretch(media, finalX, finalY, targetW, targetH);
         }
       }
 
       requestAnimationFrame(renderCanvasLoop);
     }
 
-    function drawMediaCover(media, x, y, width, height) {
-      const mode = document.getElementById('fitModeSelect') ? document.getElementById('fitModeSelect').value : 'cover';
-
-      // Mode STRETCH: Paksa video vertikal memenuhi 100% canvas lanskap tanpa potongan hitam
-      if (mode === 'stretch') {
-        try {
-          ctx.drawImage(media, x, y, width, height);
-        } catch (e) {}
-        return;
-      }
-
-      // Mode COVER: Zoom & Crop secara proporsional hingga penuh
-      let srcW = media.videoWidth || media.naturalWidth || media.width;
-      let srcH = media.videoHeight || media.naturalHeight || media.height;
-
-      if (!srcW || !srcH) {
-        try {
-          ctx.drawImage(media, x, y, width, height);
-        } catch (e) {}
-        return;
-      }
-
-      const srcRatio = srcW / srcH;
-      const destRatio = width / height;
-
-      let drawW, drawH, drawX, drawY;
-
-      if (srcRatio > destRatio) {
-        drawH = srcH;
-        drawW = srcH * destRatio;
-        drawX = (srcW - drawW) / 2;
-        drawY = 0;
-      } else {
-        drawW = srcW;
-        drawH = srcW / destRatio;
-        drawX = 0;
-        drawY = (srcH - drawH) / 2;
-      }
-
+    function drawMediaStretch(media, x, y, width, height) {
       try {
-        ctx.drawImage(media, drawX, drawY, drawW, drawH, x, y, width, height);
-      } catch (e) {
         ctx.drawImage(media, x, y, width, height);
-      }
+      } catch (e) {}
     }
 
     window.onload = init;
