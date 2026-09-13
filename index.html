@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Grand El Hajj Studio Engine - Dynamic Video & Audio Engine</title>
+  <title>Grand El Hajj Studio Engine - Audio Mixer Edition</title>
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -40,16 +40,7 @@
     
     canvas { width: 100%; height: 100%; object-fit: contain; background: #000; }
 
-    /* HUD OVERLAY INDEPENDEN GRAFIK AUDIO */
-    .audio-hud-overlay {
-      position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%);
-      pointer-events: none; z-index: 10; display: flex; align-items: flex-end; gap: 3px;
-      padding: 6px 12px; border-radius: 6px; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1);
-      transition: all 0.2s ease;
-    }
-    .hud-bar { width: 6px; background: #10b981; border-radius: 2px 2px 0 0; transition: height 0.05s linear, background-color 0.2s; min-height: 3px; }
-
-    .control-panel { width: 330px; background: #161920; border-left: 1px solid #262b36; padding: 8px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
+    .control-panel { width: 340px; background: #161920; border-left: 1px solid #262b36; padding: 8px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
     .section-title { font-weight: 700; color: #10b981; border-bottom: 1px solid #262b36; padding-bottom: 4px; font-size: 11px; margin-top: 2px; display: flex; justify-content: space-between; align-items: center; }
     
     .scale-group { display: flex; flex-direction: column; gap: 4px; background: #111318; padding: 6px 8px; border-radius: 4px; border: 1px solid #262b36; }
@@ -58,9 +49,14 @@
     .btn-reset-small:hover { background: #ef4444; color: #fff; }
 
     .scale-row { display: flex; align-items: center; gap: 6px; }
-    .scale-row label { width: 65px; font-size: 10px; color: #94a3b8; }
+    .scale-row label { width: 70px; font-size: 10px; color: #94a3b8; }
     .scale-row input[type=range] { flex: 1; height: 4px; border-radius: 2px; accent-color: #10b981; cursor: pointer; }
     .val-badge { width: 42px; text-align: right; font-family: monospace; font-size: 10px; color: #38bdf8; font-weight: bold; }
+
+    /* PANEL FITUR AUDIO MIXER SENDIRI */
+    .mixer-panel { background: #0d1520; border: 1px solid #1e3a8a; border-radius: 4px; padding: 6px; display: flex; flex-direction: column; gap: 6px; }
+    .vu-meter-box { display: flex; align-items: flex-end; height: 35px; background: #050b14; border: 1px solid #1e293b; border-radius: 4px; padding: 4px; gap: 2px; }
+    .vu-bar { flex: 1; background: #1e293b; border-radius: 1px; height: 3px; transition: height 0.04s linear, background-color 0.1s; }
 
     .full-mode-box { background: #064e3b; border: 1px solid #10b981; padding: 6px; border-radius: 4px; margin-top: 4px; display: flex; align-items: center; justify-content: space-between; }
     .full-mode-box label { font-weight: bold; color: #a7f3d0; cursor: pointer; }
@@ -126,7 +122,7 @@
 <body>
 
   <header>
-    <div class="brand">GRAND EL HAJJ // STUDIO PRO v4.0</div>
+    <div class="brand">GRAND EL HAJJ // STUDIO PRO v5.0</div>
     <div style="display:flex; gap:6px;">
       <button class="btn-action btn-preset" onclick="savePreset()">💾 SIMPAN PRESET</button>
       <button class="btn-action btn-preset" onclick="loadPreset()">📂 MUAT PRESET</button>
@@ -140,40 +136,29 @@
     <div class="top-section">
       <div class="canvas-box">
         <div class="canvas-header">
-          <span style="font-weight:700; color:#38bdf8;">PROGRAM OUTPUT PREVIEW</span>
+          <span style="font-weight:700; color:#38bdf8;">PROGRAM OUTPUT PREVIEW (CLEAN)</span>
           <span style="color:#94a3b8; font-size:10px;">MASTER CANVAS: 1280x720 (FULL HD 16:9)</span>
         </div>
         <div class="canvas-container" id="canvasContainer">
           <canvas id="masterCanvas" width="1280" height="720"></canvas>
-          
-          <!-- MODUL FITUR SEPARATIF: DYNAMIC AUDIO HUD -->
-          <div class="audio-hud-overlay" id="audioHudOverlay">
-            <!-- Dynamic Spectrum Bars -->
-          </div>
         </div>
       </div>
 
       <div class="control-panel">
-        <!-- MODUL GRAFIK AUDIO FITUR SENDIRI (INDEPENEN) -->
-        <div class="scale-group" style="border-color:#f59e0b;">
+        <!-- FITUR KHUSUS: INDEPENDENT AUDIO MIXER & MONITOR -->
+        <div class="mixer-panel">
           <div class="scale-header">
-            <span style="color:#f59e0b;">🎵 GRAFIK AUDIO HUD (INDEPENDEN)</span>
-            <button class="btn-ctrl" id="btnAudioPause" onclick="toggleAudioGraphicPause()" style="background:#f59e0b; color:#000; font-weight:bold;">⏸ PAUSE</button>
+            <span style="color:#60a5fa;">🎛️ AUDIO MIXER & REAL-TIME MONITOR</span>
+            <button class="btn-ctrl" id="btnMuteMaster" onclick="toggleMasterMute()" style="background:#ef4444;">🔊 MUTE</button>
           </div>
+          
+          <!-- GRAFIK VU METER HANYA DI PANEL KONTROL EDITOR -->
+          <div class="vu-meter-box" id="vuMeterContainer"></div>
+
           <div class="scale-row">
-            <label>Aktifkan:</label>
-            <input type="checkbox" id="chkAudioGraphic" checked onchange="audioGraphic.enabled = this.checked; updateAudioGraphicUI();">
-            <span style="color:#f59e0b; font-weight:bold; margin-left: auto;" id="lblAudioStatus">ON</span>
-          </div>
-          <div class="scale-row">
-            <label>Tinggi H:</label>
-            <input type="range" id="audioH" min="15" max="150" value="60" oninput="updateAudioGraphicUI()">
-            <span class="val-badge" id="v_audioH">60px</span>
-          </div>
-          <div class="scale-row">
-            <label>Lebar W:</label>
-            <input type="range" id="audioW" min="20" max="100" value="60" oninput="updateAudioGraphicUI()">
-            <span class="val-badge" id="v_audioW">60%</span>
+            <label>Master Vol:</label>
+            <input type="range" id="masterVolume" min="0" max="100" value="100" oninput="setMasterVolume(this.value)">
+            <span class="val-badge" id="v_masterVol">100%</span>
           </div>
         </div>
 
@@ -366,19 +351,12 @@
     let outputWindow = null;
     let isFullCanvasMode = false;
 
-    // WEB AUDIO REAL-TIME ENGINE
+    // AUDIO MIXER & ENGINE REAL-TIME
     let audioCtx = null;
+    let gainNode = null;
     let analyser = null;
-    let audioSource = null;
     let dataArray = null;
-
-    const audioGraphic = {
-      enabled: true,
-      paused: false,
-      height: 60,
-      widthPercent: 60,
-      bars: 24
-    };
+    let masterMuted = false;
 
     const layout = {
       w: [100, 100, 100],
@@ -389,45 +367,91 @@
 
     function init() {
       initSlots();
-      createHudBars();
+      createVuBars();
       requestAnimationFrame(renderCanvasLoop);
     }
 
-    function createHudBars() {
-      const overlay = document.getElementById('audioHudOverlay');
-      overlay.innerHTML = '';
-      for (let i = 0; i < audioGraphic.bars; i++) {
+    function createVuBars() {
+      const container = document.getElementById('vuMeterContainer');
+      container.innerHTML = '';
+      for (let i = 0; i < 28; i++) {
         const bar = document.createElement('div');
-        bar.className = 'hud-bar';
-        overlay.appendChild(bar);
+        bar.className = 'vu-bar';
+        container.appendChild(bar);
       }
     }
 
-    function initAudioContext(mediaElement) {
+    // ARSITEKTUR AUDIO MIXER SEPARATIF
+    function initAudioMixerEngine(mediaElement) {
       try {
         if (!audioCtx) {
           audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          gainNode = audioCtx.createGain();
+          analyser = audioCtx.createAnalyser();
+          analyser.fftSize = 64;
+
+          gainNode.connect(analyser);
+          analyser.connect(audioCtx.destination);
+          dataArray = new Uint8Array(analyser.frequencyBinCount);
         }
+
         if (audioCtx.state === 'suspended') {
           audioCtx.resume();
         }
 
-        if (analyser) analyser.disconnect();
-        
-        analyser = audioCtx.createAnalyser();
-        analyser.fftSize = 64;
-        dataArray = new Uint8Array(analyser.frequencyBinCount);
-
         if (mediaElement instanceof HTMLVideoElement || mediaElement instanceof HTMLAudioElement) {
-          if (!mediaElement._audioConnected) {
-            audioSource = audioCtx.createMediaElementSource(mediaElement);
-            audioSource.connect(analyser);
-            analyser.connect(audioCtx.destination);
-            mediaElement._audioConnected = true;
+          if (!mediaElement._audioSourceConnected) {
+            const source = audioCtx.createMediaElementSource(mediaElement);
+            source.connect(gainNode);
+            mediaElement._audioSourceConnected = true;
           }
         }
       } catch (e) {
-        console.warn("Audio Context Init:", e);
+        console.warn("Audio Mixer Engine Warning:", e);
+      }
+    }
+
+    function setMasterVolume(val) {
+      const volume = val / 100;
+      document.getElementById('v_masterVol').innerText = `${val}%`;
+      if (gainNode) {
+        gainNode.gain.value = masterMuted ? 0 : volume;
+      }
+    }
+
+    function toggleMasterMute() {
+      masterMuted = !masterMuted;
+      const btn = document.getElementById('btnMuteMaster');
+      if (masterMuted) {
+        btn.innerText = '🔇 UNMUTE';
+        btn.style.background = '#334155';
+        if (gainNode) gainNode.gain.value = 0;
+      } else {
+        btn.innerText = '🔊 MUTE';
+        btn.style.background = '#ef4444';
+        const val = parseInt(document.getElementById('masterVolume').value);
+        if (gainNode) gainNode.gain.value = val / 100;
+      }
+    }
+
+    function updateVuMeter() {
+      const bars = document.querySelectorAll('.vu-bar');
+      if (analyser && dataArray && !masterMuted) {
+        analyser.getByteFrequencyData(dataArray);
+        for (let i = 0; i < bars.length; i++) {
+          const val = dataArray[i] || 0;
+          const h = (val / 255) * 27;
+          bars[i].style.height = `${Math.max(3, h)}px`;
+
+          if (val > 210) bars[i].style.backgroundColor = '#ef4444';
+          else if (val > 130) bars[i].style.backgroundColor = '#f59e0b';
+          else bars[i].style.backgroundColor = '#38bdf8';
+        }
+      } else {
+        bars.forEach(b => {
+          b.style.height = '3px';
+          b.style.backgroundColor = '#1e293b';
+        });
       }
     }
 
@@ -456,68 +480,6 @@
           <span style="font-size:7px; color:#64748b; text-align:center;">(MP4/JPG/PDF/PPTX)</span>
         </div>
       `;
-    }
-
-    // UPDATE AUDIO GRAPHIC OVERLAY
-    function updateAudioGraphicUI() {
-      audioGraphic.height = parseInt(document.getElementById('audioH').value);
-      audioGraphic.widthPercent = parseInt(document.getElementById('audioW').value);
-      document.getElementById('v_audioH').innerText = `${audioGraphic.height}px`;
-      document.getElementById('v_audioW').innerText = `${audioGraphic.widthPercent}%`;
-
-      const overlay = document.getElementById('audioHudOverlay');
-      if (!audioGraphic.enabled) {
-        overlay.style.display = 'none';
-      } else {
-        overlay.style.display = 'flex';
-        overlay.style.width = `${audioGraphic.widthPercent}%`;
-      }
-    }
-
-    function toggleAudioGraphicPause() {
-      audioGraphic.paused = !audioGraphic.paused;
-      const btn = document.getElementById('btnAudioPause');
-      const lbl = document.getElementById('lblAudioStatus');
-      if (audioGraphic.paused) {
-        btn.innerText = '▶ PLAY';
-        btn.style.background = '#10b981';
-        lbl.innerText = 'PAUSED';
-        lbl.style.color = '#ef4444';
-      } else {
-        btn.innerText = '⏸ PAUSE';
-        btn.style.background = '#f59e0b';
-        lbl.innerText = 'ON';
-        lbl.style.color = '#f59e0b';
-      }
-    }
-
-    function renderAudioHud() {
-      if (!audioGraphic.enabled) return;
-
-      const bars = document.querySelectorAll('.hud-bar');
-      let audioDetected = false;
-
-      if (analyser && dataArray && !audioGraphic.paused) {
-        analyser.getByteFrequencyData(dataArray);
-        for (let i = 0; i < bars.length; i++) {
-          const val = dataArray[i] || 0;
-          if (val > 10) audioDetected = true;
-          const h = (val / 255) * audioGraphic.height;
-          bars[i].style.height = `${Math.max(3, h)}px`;
-          
-          if (val > 200) bars[i].style.backgroundColor = '#ef4444';
-          else if (val > 120) bars[i].style.backgroundColor = '#f59e0b';
-          else bars[i].style.backgroundColor = '#10b981';
-        }
-      }
-
-      // Jika audio hening atau di-pause, kurangi grafik menjadi diam (flat)
-      if (!audioDetected || audioGraphic.paused) {
-        bars.forEach(b => {
-          b.style.height = '3px';
-          b.style.backgroundColor = '#334155';
-        });
-      }
     }
 
     function toggleFullCanvasMode(enabled) {
@@ -567,11 +529,10 @@
     function savePreset() {
       const stateData = {
         layout: layout,
-        fullCanvas: isFullCanvasMode,
-        audioGraphic: audioGraphic
+        fullCanvas: isFullCanvasMode
       };
       localStorage.setItem('grand_el_hajj_preset', JSON.stringify(stateData));
-      alert("✅ Preset tata letak layar & Audio Graphic berhasil disimpan!");
+      alert("✅ Preset tata letak layar berhasil disimpan!");
     }
 
     function loadPreset() {
@@ -735,7 +696,6 @@
         video.src = fileUrl;
         video.loop = true;
         video.playsInline = true;
-        video.muted = false; // Izinkan audio
         video.crossOrigin = 'anonymous';
 
         video.onloadeddata = () => {
@@ -901,7 +861,7 @@
       }
     }
 
-    // AKTIVASI MEDIA KE PROGRAM KANVAS
+    // TOGGLE MEDIA KE PROGRAM CANVAS ENGINE & AUDIO MIXER
     function toggleSlotLive(key) {
       const layer = parseInt(key.split('-')[0]);
       const item = slotData[key];
@@ -920,7 +880,7 @@
         
         if (item.isVideo) {
           item.media.currentTime = 0;
-          initAudioContext(item.media);
+          initAudioMixerEngine(item.media);
           const playPromise = item.media.play();
           if (playPromise !== undefined) {
             playPromise.catch(() => {
@@ -1024,7 +984,7 @@
       }
     }
 
-    // LOOP MAIN CANVAS RENDERER
+    // MAIN RENDERER LOOP (CANVAS CLEAN TANPA GRAPHIC OVERLAY AUDIO)
     function renderCanvasLoop() {
       ctx.fillStyle = '#000000';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -1053,10 +1013,10 @@
         }
       }
 
-      // Render Dynamic Audio HUD terpisah
-      renderAudioHud();
+      // Update Grafik VU Meter Internal khusus di Panel Editor Audio Mixer
+      updateVuMeter();
 
-      // DUAL SCREEN SYNC: Kopikan tampilan ke layar Videtron (Extend Window)
+      // DUAL SCREEN SYNC: Kopikan tampilan MURNI/CLEAN ke layar Videtron
       if (outputWindow && !outputWindow.closed) {
         const videtronCanvas = outputWindow.document.getElementById('videtronCanvas');
         if (videtronCanvas) {
