@@ -57,7 +57,8 @@
     .vu-meter-box { display: flex; align-items: flex-end; height: 35px; background: #050b14; border: 1px solid #1e293b; border-radius: 4px; padding: 4px; gap: 2px; }
     .vu-bar { flex: 1; background: #1e293b; border-radius: 1px; height: 3px; transition: height 0.04s linear, background-color 0.1s; }
 
-    .full-mode-box { background: #064e3b; border: 1px solid #10b981; padding: 6px; border-radius: 4px; margin-top: 4px; display: flex; align-items: center; justify-content: space-between; }
+    .full-mode-box { background: #064e3b; border: 1px solid #10b981; padding: 6px; border-radius: 4px; margin-top: 4px; display: flex; flex-direction: column; gap: 6px; }
+    .full-mode-row { display: flex; align-items: center; justify-content: space-between; }
     .full-mode-box label { font-weight: bold; color: #a7f3d0; cursor: pointer; }
 
     .bottom-section { display: flex; flex: 1; background: #0f1115; overflow: hidden; }
@@ -121,7 +122,7 @@
 <body>
 
   <header>
-    <div class="brand">GRAND EL HAJJ // STUDIO PRO v5.2</div>
+    <div class="brand">GRAND EL HAJJ // STUDIO PRO v5.3</div>
     <div style="display:flex; gap:6px;">
       <button class="btn-action btn-preset" onclick="savePreset()">💾 SIMPAN PRESET</button>
       <button class="btn-action btn-preset" onclick="loadPreset()">📂 MUAT PRESET</button>
@@ -200,8 +201,17 @@
           </div>
 
           <div class="full-mode-box">
-            <label for="chkFullCanvas">🖥️ FULL CANVAS (FULLSCREEN COVER)</label>
-            <input type="checkbox" id="chkFullCanvas" onchange="toggleFullCanvasMode(this.checked)">
+            <div class="full-mode-row">
+              <label for="chkFullCanvas">🖥️ FULL CANVAS MODE</label>
+              <input type="checkbox" id="chkFullCanvas" onchange="toggleFullCanvasMode(this.checked)">
+            </div>
+            <div class="full-mode-row">
+              <span style="color:#93c5fd; font-size:10px;">Mode Fit Video:</span>
+              <select id="fitModeSelect" style="background:#0f1115; color:#fff; border:1px solid #334155; font-size:10px; border-radius:3px; padding:2px 4px;">
+                <option value="cover" selected>Zoom & Crop (Cover)</option>
+                <option value="stretch">Paksa Penuh (Stretch Full)</option>
+              </select>
+            </div>
           </div>
 
           <div id="controlsLayer1">
@@ -699,10 +709,11 @@
         video.src = fileUrl;
         video.loop = true;
         video.playsInline = true;
+        video.muted = true; // Paksa Mute awal agar auto-play tidak diblokir browser
         video.crossOrigin = 'anonymous';
 
         video.onloadeddata = () => {
-          video.play().catch(() => { video.muted = true; video.play(); });
+          video.play().catch(console.error);
           slotData[key] = { media: video, isVideo: true, isCam: false, url: fileUrl, typeName: 'VIDEO' };
           renderSlotUI(key);
         };
@@ -881,6 +892,7 @@
         activeMedia[layer] = item.media;
         
         if (item.isVideo) {
+          item.media.muted = false;
           item.media.currentTime = 0;
           initAudioMixerEngine(item.media);
           const playPromise = item.media.play();
@@ -986,7 +998,6 @@
       }
     }
 
-    // MAIN RENDER LOOP TEROPTIMASI DENGAN SUPORT SINKRONISASI FULL CANVAS KE VIDETRON
     function renderCanvasLoop() {
       ctx.fillStyle = '#000000';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -1017,7 +1028,6 @@
 
       updateVuMeter();
 
-      // MIRRORING DIRECT CANVAS DRAWING KE JENDELA VIDETRON (MENGHINDARI LAYAR TIDAK BERUBAH/FULL)
       if (outputWindow && !outputWindow.closed) {
         if (!outputCtx) {
           outputCanvas = outputWindow.document.getElementById('videtronCanvas');
@@ -1037,6 +1047,17 @@
     }
 
     function drawMediaCover(media, x, y, width, height) {
+      const mode = document.getElementById('fitModeSelect') ? document.getElementById('fitModeSelect').value : 'cover';
+
+      // Mode STRETCH: Paksa video vertikal memenuhi 100% canvas lanskap tanpa potongan hitam
+      if (mode === 'stretch') {
+        try {
+          ctx.drawImage(media, x, y, width, height);
+        } catch (e) {}
+        return;
+      }
+
+      // Mode COVER: Zoom & Crop secara proporsional hingga penuh
       let srcW = media.videoWidth || media.naturalWidth || media.width;
       let srcH = media.videoHeight || media.naturalHeight || media.height;
 
