@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Grand El Hajj Studio Engine - Active Sync Videtron Edition</title>
+  <title>Grand El Hajj Studio Engine - Full Canvas Videtron Fix</title>
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -121,7 +121,7 @@
 <body>
 
   <header>
-    <div class="brand">GRAND EL HAJJ // STUDIO PRO v5.1</div>
+    <div class="brand">GRAND EL HAJJ // STUDIO PRO v5.2</div>
     <div style="display:flex; gap:6px;">
       <button class="btn-action btn-preset" onclick="savePreset()">💾 SIMPAN PRESET</button>
       <button class="btn-action btn-preset" onclick="loadPreset()">📂 MUAT PRESET</button>
@@ -346,6 +346,7 @@
     let mediaRecorder = null;
     let socket = null;
     let outputWindow = null;
+    let outputCanvas = null;
     let outputCtx = null;
     let isFullCanvasMode = false;
 
@@ -555,7 +556,6 @@
       }
     }
 
-    // MEMBUKA & MEMBANTU SINKRONISASI AKTIF KE POP-UP VIDETRON
     function openOutputWindow() {
       if (outputWindow && !outputWindow.closed) {
         outputWindow.focus();
@@ -587,12 +587,10 @@
       `);
       outputWindow.document.close();
 
-      outputWindow.onload = () => {
-        const vc = outputWindow.document.getElementById('videtronCanvas');
-        if (vc) {
-          outputCtx = vc.getContext('2d', { alpha: false });
-        }
-      };
+      outputCanvas = outputWindow.document.getElementById('videtronCanvas');
+      if (outputCanvas) {
+        outputCtx = outputCanvas.getContext('2d', { alpha: false });
+      }
     }
 
     function toggleFullScreen() {
@@ -988,7 +986,7 @@
       }
     }
 
-    // MAIN RENDER LOOP TEROPTIMASI DENGAN FULL FRAME STREAM SYNC KE VIDETRON
+    // MAIN RENDER LOOP TEROPTIMASI DENGAN SUPORT SINKRONISASI FULL CANVAS KE VIDETRON
     function renderCanvasLoop() {
       ctx.fillStyle = '#000000';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -1019,15 +1017,19 @@
 
       updateVuMeter();
 
-      // DUAL SCREEN ACTIVE SYNC FRAME COPYING UNTUK VIDETRON (TIDAK AKAN MACET/DIAM)
+      // MIRRORING DIRECT CANVAS DRAWING KE JENDELA VIDETRON (MENGHINDARI LAYAR TIDAK BERUBAH/FULL)
       if (outputWindow && !outputWindow.closed) {
         if (!outputCtx) {
-          const vc = outputWindow.document.getElementById('videtronCanvas');
-          if (vc) outputCtx = vc.getContext('2d', { alpha: false });
+          outputCanvas = outputWindow.document.getElementById('videtronCanvas');
+          if (outputCanvas) {
+            outputCtx = outputCanvas.getContext('2d', { alpha: false });
+          }
         }
 
-        if (outputCtx) {
-          outputCtx.drawImage(canvas, 0, 0);
+        if (outputCtx && outputCanvas) {
+          outputCtx.fillStyle = '#000000';
+          outputCtx.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
+          outputCtx.drawImage(canvas, 0, 0, outputCanvas.width, outputCanvas.height);
         }
       }
 
