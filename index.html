@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Grand El Hajj Studio Engine - Audio Mixer Edition</title>
+  <title>Grand El Hajj Studio Engine - Active Sync Videtron Edition</title>
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -53,7 +53,6 @@
     .scale-row input[type=range] { flex: 1; height: 4px; border-radius: 2px; accent-color: #10b981; cursor: pointer; }
     .val-badge { width: 42px; text-align: right; font-family: monospace; font-size: 10px; color: #38bdf8; font-weight: bold; }
 
-    /* PANEL FITUR AUDIO MIXER SENDIRI */
     .mixer-panel { background: #0d1520; border: 1px solid #1e3a8a; border-radius: 4px; padding: 6px; display: flex; flex-direction: column; gap: 6px; }
     .vu-meter-box { display: flex; align-items: flex-end; height: 35px; background: #050b14; border: 1px solid #1e293b; border-radius: 4px; padding: 4px; gap: 2px; }
     .vu-bar { flex: 1; background: #1e293b; border-radius: 1px; height: 3px; transition: height 0.04s linear, background-color 0.1s; }
@@ -122,7 +121,7 @@
 <body>
 
   <header>
-    <div class="brand">GRAND EL HAJJ // STUDIO PRO v5.0</div>
+    <div class="brand">GRAND EL HAJJ // STUDIO PRO v5.1</div>
     <div style="display:flex; gap:6px;">
       <button class="btn-action btn-preset" onclick="savePreset()">💾 SIMPAN PRESET</button>
       <button class="btn-action btn-preset" onclick="loadPreset()">📂 MUAT PRESET</button>
@@ -145,14 +144,12 @@
       </div>
 
       <div class="control-panel">
-        <!-- FITUR KHUSUS: INDEPENDENT AUDIO MIXER & MONITOR -->
         <div class="mixer-panel">
           <div class="scale-header">
             <span style="color:#60a5fa;">🎛️ AUDIO MIXER & REAL-TIME MONITOR</span>
             <button class="btn-ctrl" id="btnMuteMaster" onclick="toggleMasterMute()" style="background:#ef4444;">🔊 MUTE</button>
           </div>
           
-          <!-- GRAFIK VU METER HANYA DI PANEL KONTROL EDITOR -->
           <div class="vu-meter-box" id="vuMeterContainer"></div>
 
           <div class="scale-row">
@@ -339,7 +336,7 @@
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
     const canvas = document.getElementById('masterCanvas');
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
 
     const activeMedia = [null, null, null]; 
     const slotData = {}; 
@@ -349,9 +346,10 @@
     let mediaRecorder = null;
     let socket = null;
     let outputWindow = null;
+    let outputCtx = null;
     let isFullCanvasMode = false;
 
-    // AUDIO MIXER & ENGINE REAL-TIME
+    // AUDIO MIXER
     let audioCtx = null;
     let gainNode = null;
     let analyser = null;
@@ -381,7 +379,6 @@
       }
     }
 
-    // ARSITEKTUR AUDIO MIXER SEPARATIF
     function initAudioMixerEngine(mediaElement) {
       try {
         if (!audioCtx) {
@@ -558,6 +555,7 @@
       }
     }
 
+    // MEMBUKA & MEMBANTU SINKRONISASI AKTIF KE POP-UP VIDETRON
     function openOutputWindow() {
       if (outputWindow && !outputWindow.closed) {
         outputWindow.focus();
@@ -588,6 +586,13 @@
         </html>
       `);
       outputWindow.document.close();
+
+      outputWindow.onload = () => {
+        const vc = outputWindow.document.getElementById('videtronCanvas');
+        if (vc) {
+          outputCtx = vc.getContext('2d', { alpha: false });
+        }
+      };
     }
 
     function toggleFullScreen() {
@@ -861,7 +866,6 @@
       }
     }
 
-    // TOGGLE MEDIA KE PROGRAM CANVAS ENGINE & AUDIO MIXER
     function toggleSlotLive(key) {
       const layer = parseInt(key.split('-')[0]);
       const item = slotData[key];
@@ -984,7 +988,7 @@
       }
     }
 
-    // MAIN RENDERER LOOP (CANVAS CLEAN TANPA GRAPHIC OVERLAY AUDIO)
+    // MAIN RENDER LOOP TEROPTIMASI DENGAN FULL FRAME STREAM SYNC KE VIDETRON
     function renderCanvasLoop() {
       ctx.fillStyle = '#000000';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -1013,16 +1017,17 @@
         }
       }
 
-      // Update Grafik VU Meter Internal khusus di Panel Editor Audio Mixer
       updateVuMeter();
 
-      // DUAL SCREEN SYNC: Kopikan tampilan MURNI/CLEAN ke layar Videtron
+      // DUAL SCREEN ACTIVE SYNC FRAME COPYING UNTUK VIDETRON (TIDAK AKAN MACET/DIAM)
       if (outputWindow && !outputWindow.closed) {
-        const videtronCanvas = outputWindow.document.getElementById('videtronCanvas');
-        if (videtronCanvas) {
-          const vCtx = videtronCanvas.getContext('2d');
-          vCtx.clearRect(0, 0, videtronCanvas.width, videtronCanvas.height);
-          vCtx.drawImage(canvas, 0, 0);
+        if (!outputCtx) {
+          const vc = outputWindow.document.getElementById('videtronCanvas');
+          if (vc) outputCtx = vc.getContext('2d', { alpha: false });
+        }
+
+        if (outputCtx) {
+          outputCtx.drawImage(canvas, 0, 0);
         }
       }
 
