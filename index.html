@@ -459,7 +459,7 @@
       }
     }
 
-    /* KONEKSI VIDETRON TANPA BLOKIR BROWSER (MANUAL DOM INJECTION) */
+    /* KONEKSI VIDETRON TANPA BLOKIR BROWSER */
     function openOutputWindow() {
       if (outputWindow && !outputWindow.closed) {
         outputWindow.focus();
@@ -792,6 +792,7 @@
       }
     }
 
+    /* FIX AUTOPLAY VIDEO SUPAYA GERAK */
     function toggleSlotLive(key) {
       const layer = parseInt(key.split('-')[0]);
       const item = slotData[key];
@@ -808,13 +809,15 @@
 
         activeMedia[layer] = item.media;
         
-        if (item.isVideo) {
+        // Paksa video diputar saat tombol LIVE diaktifkan
+        if (item.isVideo && item.media) {
           item.media.muted = masterAudioMuted;
           const playPromise = item.media.play();
           if (playPromise !== undefined) {
             playPromise.catch(err => {
+              // Jika terblokir audio kebijakan browser, di-mute dulu lalu di-play ulang
               item.media.muted = true;
-              item.media.play();
+              item.media.play().catch(e => console.log("Video Play Error:", e));
             });
           }
         }
@@ -912,41 +915,45 @@
       }
     }
 
+    /* RENDER LOOP FAIL-SAFE AGAR VIDETRON TETAP BERGERAK RUNNING */
     function renderCanvasLoop() {
-      ctx.fillStyle = '#000000';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      try {
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      const sectionWidth = canvas.width / 3;
+        const sectionWidth = canvas.width / 3;
 
-      if (isFullCanvasMode && activeMedia[1]) {
-        drawMediaStretch(activeMedia[1], 0, 0, canvas.width, canvas.height);
-      } else {
-        for (let i = 0; i < 3; i++) {
-          const media = activeMedia[i];
-          if (!media) continue;
+        if (isFullCanvasMode && activeMedia[1]) {
+          drawMediaStretch(activeMedia[1], 0, 0, canvas.width, canvas.height);
+        } else {
+          for (let i = 0; i < 3; i++) {
+            const media = activeMedia[i];
+            if (!media) continue;
 
-          const baseScaleW = layout.w[i] / 100;
-          const baseScaleH = layout.h[i] / 100;
-          const targetW = sectionWidth * baseScaleW;
-          const targetH = canvas.height * baseScaleH;
+            const baseScaleW = layout.w[i] / 100;
+            const baseScaleH = layout.h[i] / 100;
+            const targetW = sectionWidth * baseScaleW;
+            const targetH = canvas.height * baseScaleH;
 
-          const baseX = i * sectionWidth + (sectionWidth - targetW) / 2;
-          const baseY = (canvas.height - targetH) / 2;
+            const baseX = i * sectionWidth + (sectionWidth - targetW) / 2;
+            const baseY = (canvas.height - targetH) / 2;
 
-          const finalX = baseX + layout.x[i];
-          const finalY = baseY + layout.y[i];
+            const finalX = baseX + layout.x[i];
+            const finalY = baseY + layout.y[i];
 
-          drawMediaStretch(media, finalX, finalY, targetW, targetH);
+            drawMediaStretch(media, finalX, finalY, targetW, targetH);
+          }
         }
-      }
 
-      // SINKRONISASI KANVAS SECARA DIRECT KE POP-UP VIDETRON
-      if (outputWindow && !outputWindow.closed && outCtx) {
-        try {
+        // SINKRONISASI KE POP-UP VIDETRON
+        if (outputWindow && !outputWindow.closed && outCtx) {
           outCtx.drawImage(canvas, 0, 0, 1920, 1080);
-        } catch (e) {}
+        }
+      } catch (err) {
+        // Tangkap error per-frame agar looping animasi TIDAK mati
       }
 
+      // Loop terus dipanggil tanpa henti
       requestAnimationFrame(renderCanvasLoop);
     }
 
