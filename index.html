@@ -459,67 +459,72 @@
       }
     }
 
-    /* KONEKSI PENUH DUAL DISPLAY / VIDETRON BERBASIS DIRECT CANVAS COPY */
+    /* KONEKSI VIDETRON TANPA BLOKIR BROWSER (MANUAL DOM INJECTION) */
     function openOutputWindow() {
       if (outputWindow && !outputWindow.closed) {
         outputWindow.focus();
         return;
       }
 
-      outputWindow = window.open('', 'VidetronCleanOutput', 'width=1920,height=1080,menubar=no,toolbar=no,location=no,status=no,scrollbars=no,resizable=yes');
+      outputWindow = window.open('', 'VidetronCleanOutput', 'width=1920,height=1080');
 
       if (!outputWindow) {
-        alert("Browser memblokir Pop-up! Harap izinkan Pop-up untuk membuka Output Videotron.");
+        alert("Browser memblokir Pop-up! Harap izinkan Pop-up di URL bar Chrome.");
         return;
       }
 
-      outputWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>VIDETRON CLEAN OUTPUT</title>
-          <style>
-            * { margin:0; padding:0; background:#000; overflow:hidden; }
-            html, body { width:100vw; height:100vh; display:flex; justify-content:center; align-items:center; background:#000; }
-            canvas { width:100vw; height:100vh; object-fit:fill !important; display:block; }
-            .hint {
-              position: absolute; top:12px; left:12px; background:rgba(0,0,0,0.85);
-              color:#10b981; padding:8px 14px; font-family:sans-serif; font-size:12px;
-              border-radius:4px; pointer-events:none; transition:opacity 1s; z-index:10; border:1px solid #10b981;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="hint" id="hintBox">Tarik jendela ini ke Layar Videotron, lalu Tekan 'F' / Double Click untuk Fullscreen</div>
-          <canvas id="outCanvas" width="1920" height="1080"></canvas>
-          <script>
-            const hint = document.getElementById('hintBox');
-            setTimeout(() => { if(hint) hint.style.opacity = '0'; }, 4000);
+      const doc = outputWindow.document;
+      doc.title = "VIDETRON CLEAN OUTPUT";
+      
+      doc.body.style.margin = "0";
+      doc.body.style.padding = "0";
+      doc.body.style.backgroundColor = "#000000";
+      doc.body.style.overflow = "hidden";
+      doc.body.style.width = "100vw";
+      doc.body.style.height = "100vh";
+      doc.body.style.display = "flex";
+      doc.body.style.justifyContent = "center";
+      doc.body.style.alignItems = "center";
 
-            function goFullscreen() {
-              if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(err => console.log(err));
-              } else {
-                if (document.exitFullscreen) document.exitFullscreen();
-              }
-            }
+      const outCanvas = doc.createElement('canvas');
+      outCanvas.id = 'outCanvas';
+      outCanvas.width = 1920;
+      outCanvas.height = 1080;
+      outCanvas.style.width = "100vw";
+      outCanvas.style.height = "100vh";
+      outCanvas.style.objectFit = "fill";
+      outCanvas.style.display = "block";
 
-            document.addEventListener('dblclick', goFullscreen);
-            window.addEventListener('keydown', (e) => {
-              if (e.key === 'f' || e.key === 'F') goFullscreen();
-            });
-          <\/script>
-        </body>
-        </html>
-      `);
-      outputWindow.document.close();
+      doc.body.appendChild(outCanvas);
 
-      setTimeout(() => {
-        const outCanvas = outputWindow.document.getElementById('outCanvas');
-        if (outCanvas) {
-          outCtx = outCanvas.getContext('2d');
+      const hint = doc.createElement('div');
+      hint.innerText = "Tarik jendela ini ke Layar Videotron, lalu tekan 'F' untuk Fullscreen";
+      hint.style.position = "absolute";
+      hint.style.top = "12px";
+      hint.style.left = "12px";
+      hint.style.background = "rgba(0,0,0,0.85)";
+      hint.style.color = "#10b981";
+      hint.style.padding = "8px 14px";
+      hint.style.fontFamily = "sans-serif";
+      hint.style.fontSize = "12px";
+      hint.style.borderRadius = "4px";
+      hint.style.border = "1px solid #10b981";
+      hint.style.zIndex = "10";
+      doc.body.appendChild(hint);
+
+      setTimeout(() => { hint.style.display = 'none'; }, 4000);
+
+      outputWindow.addEventListener('keydown', (e) => {
+        if (e.key === 'f' || e.key === 'F') {
+          if (!doc.fullscreenElement) {
+            doc.documentElement.requestFullscreen().catch(err => console.log(err));
+          } else {
+            if (doc.exitFullscreen) doc.exitFullscreen();
+          }
         }
-      }, 300);
+      });
+
+      outCtx = outCanvas.getContext('2d');
     }
 
     function toggleFullScreen() {
@@ -935,7 +940,7 @@
         }
       }
 
-      // SINKRONISASI LANGSUNG KE JENDELA VIDETRON
+      // SINKRONISASI KANVAS SECARA DIRECT KE POP-UP VIDETRON
       if (outputWindow && !outputWindow.closed && outCtx) {
         try {
           outCtx.drawImage(canvas, 0, 0, 1920, 1080);
